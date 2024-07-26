@@ -90,13 +90,13 @@ export default function ForgotPasswordScreen() {
                   { fontFamily: "Nunito_600SemiBold" },
                 ]}
               >
-                Reset Password
+                Submit
               </Text>
             )}
           </TouchableOpacity>
 
           <View style={styles.signUpRedirect}>
-            <Text style={{ fontSize: 18, fontFamily: "Nunito_600SemiBold" }}>
+            <Text style={{ fontSize: 18, fontFamily: "Nunito_500Medium" }}>
               Remember your password?
             </Text>
             <TouchableOpacity onPress={() => router.push("/login")}>

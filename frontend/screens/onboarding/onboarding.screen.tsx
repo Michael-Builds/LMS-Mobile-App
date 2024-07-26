@@ -1,6 +1,6 @@
 import { Image, Text, TouchableOpacity, View } from "react-native"
 import React from "react"
-import { Nunito_400Regular, Nunito_700Bold } from "@expo-google-fonts/nunito"
+import { Nunito_400Regular, Nunito_500Medium, Nunito_700Bold } from "@expo-google-fonts/nunito"
 import { Raleway_700Bold } from "@expo-google-fonts/raleway"
 import { useFonts } from "expo-font"
 import { LinearGradient } from "expo-linear-gradient"
@@ -56,7 +56,7 @@ export default function OnBoardingScreen() {
           style={styles.buttonWrapper}
           onPress={() => router.push("/(routes)/welcome-intro")}
         >
-          <Text style={[styles.buttonText, { fontFamily: "Nunito_700Bold" }]}>
+          <Text style={[styles.buttonText, { fontFamily: "Nunito_400Regular" }]}>
             Getting Started
           </Text>
         </TouchableOpacity>

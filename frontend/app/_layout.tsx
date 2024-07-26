@@ -12,6 +12,7 @@ export { ErrorBoundary } from "expo-router"
 SplashScreen.preventAutoHideAsync()
 
 export default function RootLayout() {
+
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     ...FontAwesome.font,
@@ -39,16 +40,6 @@ export default function RootLayout() {
     return <CustomSplashScreen />
   }
 
-  // useEffect(() => {
-  //   if (loaded) {
-  //     SplashScreen.hideAsync();
-  //   }
-  // }, [loaded]);
-
-  // if (!loaded) {
-  //   return null;
-  // }
-
   return <RootLayoutNav />
 }
 
@@ -65,6 +56,8 @@ function RootLayoutNav() {
           <Stack.Screen name="(routes)/welcome-intro/index" />
           <Stack.Screen name="(routes)/login/index" />
           <Stack.Screen name="(routes)/signup/index" />
+          <Stack.Screen name="(routes)/forgot-password/index" />
+          <Stack.Screen name="(routes)/verifyAccount/index" />
         </Stack>
       )}
     </>

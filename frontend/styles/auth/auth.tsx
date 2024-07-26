@@ -13,7 +13,7 @@ export const styles = StyleSheet.create({
     width: "55%",
     height: 300,
     alignSelf: "center",
-    marginTop: 60,
+    marginTop: 55,
   },
 
   welcomeText: {
@@ -38,7 +38,7 @@ export const styles = StyleSheet.create({
     height: 55,
     marginHorizontal: 16,
     borderRadius: 6,
-    paddingLeft: 40,
+    paddingLeft: 45,
     fontSize: 15,
     backgroundColor: "#fff",
     color: "#575757",
@@ -121,5 +121,44 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 20,
   },
-  
+
+  verifyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+
+  verifyHeaderText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },
+
+  verifysubText: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 22,
+    textAlign: "center",
+    maxWidth: "80%",
+    lineHeight: 22,
+  },
+
+  verifyInputContainer: {
+    flexDirection: "row",
+    marginBottom: 20,
+  },
+
+  verifyInputBox: {
+    width: 60,
+    height: 60,
+    borderWidth: 1.5,
+    borderColor: "#ddd",
+    textAlign: "center",
+    marginRight: 10,
+    marginTop: 5,
+    borderRadius: 10,
+    fontSize: 20,
+  },
 })

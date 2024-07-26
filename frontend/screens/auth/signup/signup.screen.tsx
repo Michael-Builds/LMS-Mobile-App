@@ -87,7 +87,10 @@ export default function SignUpScreen() {
     setUserInfo({ ...userInfo, password: value })
   }
 
-  const handleSignUp = () => {}
+  const handleSignUp = () => {
+
+  router.push("(routes)/verifyAccount")
+  }
 
   return (
     <LinearGradient colors={["#E5ECF9", "#F6F7F9"]} style={{ flex: 1 }}>
@@ -157,7 +160,7 @@ export default function SignUpScreen() {
               keyboardType="default"
               secureTextEntry={!isPasswordVisible}
               defaultValue=""
-              placeholder="******"
+              placeholder="Enter Password"
               onChangeText={handlePasswordValidation}
             />
             <TouchableOpacity
@@ -183,18 +186,6 @@ export default function SignUpScreen() {
               </View>
             )}
           </View>
-
-          {/* <TouchableOpacity onPress={() => router.push("/forgot-password")}>
-            <Text
-              style={[
-                styles.forgotSection,
-                { fontFamily: "Nunito_600SemiBold" },
-              ]}
-            >
-              Forgot Password
-            </Text>
-          </TouchableOpacity> */}
-
           <TouchableOpacity style={styles.buttonWrapper} onPress={handleSignUp}>
             {buttonSpinner ? (
               <ActivityIndicator size="small" color={"white"} />
@@ -226,7 +217,7 @@ export default function SignUpScreen() {
             </TouchableOpacity>
           </View>
           <View style={styles.signUpRedirect}>
-            <Text style={{ fontSize: 18, fontFamily: "Nunito_600SemiBold" }}>
+            <Text style={{ fontSize: 18, fontFamily: "Nunito_500Medium" }}>
               Already have an account?
             </Text>
             <TouchableOpacity onPress={() => router.push("/login")}>
