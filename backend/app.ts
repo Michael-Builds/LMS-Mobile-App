@@ -7,34 +7,35 @@ import userRouter from './routes/user.route';
 
 export const app = express();
 
-// bodyParser
-app.use(express.json({ limit: "50mb" }))
+// Body Parser
+app.use(express.json({ limit: "50mb" }));
 
-// cookie parser
+// Cookie Parser
 app.use(cookieParser());
 
-// cors => cross origin sharing
+// CORS Configuration
 app.use(cors({
-    origin: ORIGIN
+    origin: ORIGIN,
+    credentials: true // Allow credentials
 }));
 
-// routes
+// Routes
 app.use("/api/v1", userRouter);
 
-// api testing
+// API Testing
 app.get("/test", (req: Request, res: Response, next: NextFunction) => {
     res.status(200).json({
         success: true,
         message: "Test successful"
     });
-})
+});
 
-// unknown route access
+// Unknown Route Access
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
     const err = new Error(`Route ${req.originalUrl} not found`) as any;
     err.status = 404;
     next(err);
-})
+});
 
-app.use(ErrorMiddleware)
-
+// Error Middleware
+app.use(ErrorMiddleware);

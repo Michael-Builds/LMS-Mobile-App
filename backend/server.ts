@@ -7,3 +7,4 @@ app.listen(PORT, () => {
     console.log(colors.bgCyan.white(`Server running in ${NODE_ENV} mode on port ${PORT}`))
     connectDB();
 });
+

@@ -1,8 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import {
-    ACTIVATION_SECRET,
-} from "../config";
+import { ACTIVATION_SECRET} from "../config";
 import { CatchAsyncErrors } from "../middleware/catchAsyncErrors";
 import User, { IUser } from "../models/user.model";
 import ErrorHandler from "../utils/ErrorHandler";
@@ -15,6 +13,7 @@ if (!ACTIVATION_SECRET) {
 
 export const Registration = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     const { fullname, email, password } = req.body;
+    
     const isEmailExist = await User.findOne({ email });
 
     if (isEmailExist) {
@@ -141,9 +140,7 @@ export const UserLogin = CatchAsyncErrors(async (req: Request, res: Response, ne
         if (!isPasswordMatched) {
             return next(new ErrorHandler("Invalid password", 400));
         }
-        sendToken(
-            user, 200, res
-        )
+        sendToken(user, 200, res)
     } catch (err: any) {
         return next(new ErrorHandler(err.message, 400));
     }
@@ -156,8 +153,8 @@ export const UserLogout = CatchAsyncErrors(async (req: Request, res: Response, n
         res.cookie("refresh_token", "", { maxAge: 1 })
         res.status(200).json({
             success: true,
-            message: "Logged out successfully"
-        })
+            message:"Logged out successfully"
+})
 
     } catch (err: any) {
         return next(new ErrorHandler(err.message, 400));
