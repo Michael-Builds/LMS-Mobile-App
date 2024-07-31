@@ -59,7 +59,7 @@ export default function VerifyAccountScreen() {
       <TouchableOpacity onPress={()=> router.back()}>
         <Text
           style={{ fontSize: 16, paddingTop: 18,fontFamily: "Nunito_400Regular"}} >
-          Return to login
+         Go back
         </Text>
       </TouchableOpacity>
     </View>
