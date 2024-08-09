@@ -1,10 +1,6 @@
 import { Response } from "express";
 import { IUser } from "../models/user.model";
-import {
-    ACCESS_TOKEN_EXPIRE,
-    NODE_ENV,
-    REFRESH_TOKEN_EXPIRE
-} from "../config";
+import { ACCESS_TOKEN_EXPIRE, NODE_ENV, REFRESH_TOKEN_EXPIRE } from "../config";
 import { redis } from "./redis";
 import ErrorHandler from "./ErrorHandler";
 
@@ -12,7 +8,7 @@ interface ITokenOptions {
     expires: Date;
     maxAge: number;
     httpOnly: boolean;
-    sameSite: "lax" | "strict" | "none" | undefined;
+    sameSite: boolean | "lax" | "none" | "strict" | undefined;
     secure?: boolean;
 }
 
@@ -20,52 +16,43 @@ export const sendToken = (user: IUser, statusCode: number, res: Response) => {
     const accessToken = user.signAccessToken();
     const refreshToken = user.signRefreshToken();
 
-    if (user._id) {
-        redis.set(user._id.toString(), JSON.stringify(user));
-    } else {
+    if (!user._id) {
         throw new ErrorHandler("User ID is not defined", 400);
     }
 
-    if (!ACCESS_TOKEN_EXPIRE) {
-        throw new Error("ACCESS_TOKEN_EXPIRE is not defined");
-    }
+    const userId = user._id.toString();
+    redis.set(userId, JSON.stringify(user)).catch((err) => {
+        throw new ErrorHandler("Failed to set user in Redis", 500);
+    });
 
-    if (!REFRESH_TOKEN_EXPIRE) {
-        throw new Error("REFRESH_TOKEN_EXPIRE is not defined");
-    }
-
-    const accessTokenExpires = parseInt(ACCESS_TOKEN_EXPIRE, 10);
-    const refreshTokenExpires = parseInt(REFRESH_TOKEN_EXPIRE, 10);
+    const accessTokenExpires = parseInt(ACCESS_TOKEN_EXPIRE ?? "3600", 10) * 1000;
+    const refreshTokenExpires = parseInt(REFRESH_TOKEN_EXPIRE ?? "86400", 10) * 1000;
 
     const accessTokenOptions: ITokenOptions = {
-        expires: new Date(Date.now() + accessTokenExpires * 1000),
-        maxAge: accessTokenExpires * 1000,
+        expires: new Date(Date.now() + accessTokenExpires),
+        maxAge: accessTokenExpires,
         httpOnly: true,
-        sameSite: "lax"
+        sameSite: "lax",
+        secure: NODE_ENV === 'production',
     };
 
     const refreshTokenOptions: ITokenOptions = {
-        expires: new Date(Date.now() + refreshTokenExpires * 1000),
-        maxAge: refreshTokenExpires * 1000,
+        expires: new Date(Date.now() + refreshTokenExpires),
+        maxAge: refreshTokenExpires,
         httpOnly: true,
-        sameSite: "lax"
+        sameSite: "lax",
+        secure: NODE_ENV === 'production',
     };
 
-    if (NODE_ENV === 'production') {
-        accessTokenOptions.secure = true;
-        refreshTokenOptions.secure = true;
-        accessTokenOptions.sameSite = 'strict';
-        refreshTokenOptions.sameSite = 'strict';
-    }
-
+    console.log('Setting access_token and refresh_token cookies');
     res.cookie("access_token", accessToken, accessTokenOptions);
     res.cookie("refresh_token", refreshToken, refreshTokenOptions);
-
-    console.log('Access Token Cookie Set:', res.getHeader('Set-Cookie')); // Log cookie
 
     res.status(statusCode).json({
         success: true,
         user,
-        accessToken
+        accessToken,
     });
-}
+};
+
+

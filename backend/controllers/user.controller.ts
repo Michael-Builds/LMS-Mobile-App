@@ -1,6 +1,8 @@
+//
+
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { ACTIVATION_SECRET} from "../config";
+import { ACTIVATION_SECRET, NODE_ENV } from "../config";
 import { CatchAsyncErrors } from "../middleware/catchAsyncErrors";
 import User, { IUser } from "../models/user.model";
 import ErrorHandler from "../utils/ErrorHandler";
@@ -13,7 +15,7 @@ if (!ACTIVATION_SECRET) {
 
 export const Registration = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     const { fullname, email, password } = req.body;
-    
+
     const isEmailExist = await User.findOne({ email });
 
     if (isEmailExist) {
@@ -79,10 +81,8 @@ interface IActivationRequest {
 // Controller to activate user account
 export const activateAccount = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // Destructuring activation token and code from the request body
         const { activation_token, activation_code } = req.body as IActivationRequest;
 
-        // Verifying the JWT token to get user and activation code
         const decoded = jwt.verify(
             activation_token,
             ACTIVATION_SECRET as string
@@ -90,22 +90,18 @@ export const activateAccount = CatchAsyncErrors(async (req: Request, res: Respon
 
         const { user, activationCode } = decoded;
 
-        // Checking if the provided activation code matches the one in the token
         if (activationCode !== activation_code) {
             return next(new ErrorHandler("Invalid activation code", 400));
         }
 
-        // Finding the user in the database
         const existingUser = await User.findOne({ email: user.email });
         if (!existingUser) {
             return next(new ErrorHandler("User not found", 404));
         }
 
-        // Setting the user as verified
         existingUser.isVerified = true;
         await existingUser.save();
 
-        // Sending success response
         res.status(200).json({
             success: true,
             message: "Account activated successfully",
@@ -115,48 +111,57 @@ export const activateAccount = CatchAsyncErrors(async (req: Request, res: Respon
     }
 });
 
-// User Login
 interface ILoginRequest {
     email: string;
     password: string;
 }
 
-// Login User
 export const UserLogin = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const { email, password } = req.body as ILoginRequest;
+    const { email, password } = req.body as ILoginRequest;
 
-        if (!email || !password) {
-            return next(new ErrorHandler("Please enter an email or password", 400))
-        }
-        const user = await User.findOne({ email }).select("+password");
-
-        if (!user) {
-            return next(new ErrorHandler("Invalid email or password", 400));
-        }
-
-        const isPasswordMatched = await user.comparePassword(password);
-
-        if (!isPasswordMatched) {
-            return next(new ErrorHandler("Invalid password", 400));
-        }
-        sendToken(user, 200, res)
-    } catch (err: any) {
-        return next(new ErrorHandler(err.message, 400));
+    if (!email || !password) {
+        return next(new ErrorHandler("Please enter an email or password", 400));
     }
+
+    const user = await User.findOne({ email }).select("+password");
+
+    if (!user) {
+        return next(new ErrorHandler("Invalid email or password", 400));
+    }
+
+    const isPasswordMatched = await user.comparePassword(password);
+
+    if (!isPasswordMatched) {
+        return next(new ErrorHandler("Invalid password", 400));
+    }
+
+    console.log("Sending token...");
+    sendToken(user, 200, res);
+    console.log("Token sent. Cookies set:", res.getHeaders()['set-cookie']);
 });
 
-// Logout user
-export const UserLogout = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        res.cookie("access_token", "", { maxAge: 1 })
-        res.cookie("refresh_token", "", { maxAge: 1 })
-        res.status(200).json({
-            success: true,
-            message:"Logged out successfully"
-})
 
-    } catch (err: any) {
-        return next(new ErrorHandler(err.message, 400));
-    }
-})
+export const UserLogout = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    // Log cookies before clearing them
+    console.log('Clearing cookies:', req.cookies);
+
+    res.clearCookie("access_token", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: NODE_ENV === 'production',
+    });
+    res.clearCookie("refresh_token", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: NODE_ENV === 'production',
+    });
+
+    // Log cookies after clearing them
+    console.log('Cookies after clearing:', req.cookies);
+
+    res.status(200).json({
+        success: true,
+        message: "Logged out successfully",
+    });
+});
+

@@ -89,7 +89,7 @@ userSchema.methods.signAccessToken = function () {
     if (!ACCESS_TOKEN) {
         throw new Error("ACCESS_TOKEN is not defined");
     }
-    return jwt.sign({ id: this._id }, ACCESS_TOKEN as string);
+    return jwt.sign({ id: this._id }, ACCESS_TOKEN);
 };
 
 // Method to sign the Refresh Token
@@ -97,7 +97,7 @@ userSchema.methods.signRefreshToken = function () {
     if (!REFRESH_TOKEN) {
         throw new Error("REFRESH_TOKEN is not defined");
     }
-    return jwt.sign({ id: this._id }, REFRESH_TOKEN as string);
+    return jwt.sign({ id: this._id }, REFRESH_TOKEN );
 };
 
 // Method to compare the entered password with the hashed password in the database
