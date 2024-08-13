@@ -1,37 +1,27 @@
-import express, { NextFunction, Request, Response } from "express"
-import cors from "cors"
-import cookieParser from "cookie-parser"
-import { ORIGIN } from "./config"
-import { ErrorMiddleware } from "./middleware/error"
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import { ORIGIN } from "./config";
+import { ErrorMiddleware } from './middleware/error';
+import userRouter from './routes/user.route';
 
-export const app = express()
+export const app = express();
 
-// body parsing
-app.use(express.json({ limit: "100mb" }))
+app.use(express.json({ limit: "50mb" }));
+app.use(cookieParser());
 
-// cookies parsing
-app.use(cookieParser())
-
-// cors parsing => Protecting our server from unauthorized routes
 app.use(cors({
     origin: ORIGIN,
-    credentials: true,
-}))
+    credentials: true
+}));
 
-// api testing
-app.get("/api/testing", (req: Request, res: Response, next: NextFunction) => {
-    res.status(200).json({
-        success: true,
-        message: "Test successful"
-    })
-})
+// routes
+app.use("/auth/api", userRouter);
 
-
-app.all("*", (req: Request, res: Response, next: NextFunction) => {
+app.all("*", (req, res, next) => {
     const err = new Error(`Route ${req.originalUrl} not found`) as any;
     err.status = 404;
     next(err);
 });
-
 
 app.use(ErrorMiddleware);
