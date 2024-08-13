@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from "express";
 import ErrorHandler from "../utils/ErrorHandler";
 
 export const ErrorMiddleware = (err: any, req: Request, res: Response, next: NextFunction) => {
-     
     // Set default status and message if not provided
     err.status = err.status || 500;
     err.message = err.message || "Internal Server Error";
