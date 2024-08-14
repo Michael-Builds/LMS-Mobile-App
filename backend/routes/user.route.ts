@@ -33,6 +33,4 @@ userRouter.put("/update-profile", isAuthenticated, updateUserProfile)
 userRouter.put("/update-password", isAuthenticated, updatePassword)
 
 
-// 
-// socialAuth
 export default userRouter;
