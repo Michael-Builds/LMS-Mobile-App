@@ -21,6 +21,7 @@ import { styles } from "@/styles/auth/auth"
 import { router } from "expo-router"
 
 export default function ForgotPasswordScreen() {
+  
   let [fontsLoaded, fontError] = useFonts({
     Raleway_700Bold,
     Nunito_700Bold,
