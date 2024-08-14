@@ -1,5 +1,7 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 import bcrypt from "bcrypt";
+import { ACCESS_TOKEN, ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN, REFRESH_TOKEN_EXPIRY } from "../config";
+import jwt from "jsonwebtoken";
 
 const emailRegexPattern: RegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -15,6 +17,8 @@ export interface IUser extends Document {
     isVerified: boolean
     courses: Array<{ courseId: string }>
     comparePassword: (password: string) => Promise<boolean>
+    signAccessToken: () => string
+    signRefreshToken: () => string
 }
 
 const userSchema: Schema<IUser> = new mongoose.Schema({
@@ -30,7 +34,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: [true, "Please enter your password"],
+        // required: [true, "Please enter your password"],
         minlength: [8, "Password must be at least 8 characters"],
         select: false
     },
@@ -66,10 +70,36 @@ userSchema.pre<IUser>("save", async function (next) {
     next();
 });
 
+
+// Method to sign the access token
+userSchema.methods.signAccessToken = function () {
+    try {
+        return jwt.sign({ id: this._id }, ACCESS_TOKEN || "", {
+            expiresIn: ACCESS_TOKEN_EXPIRY,
+        });
+    } catch (error: any) {
+        console.error("Error signing access token", error);
+        throw new Error("Could not generate access token");
+    }
+};
+
+// Method to sign the refresh token
+userSchema.methods.signRefreshToken = function () {
+    try {
+        return jwt.sign({ id: this._id }, REFRESH_TOKEN || "", {
+            expiresIn: REFRESH_TOKEN_EXPIRY,
+        });
+    } catch (error: any) {
+        console.error("Error signing refresh token", error);
+        throw new Error("Could not generate refresh token");
+    }
+};
+
 // Compare Password Configuration
 userSchema.methods.comparePassword = async function (enteredPassword: string): Promise<boolean> {
     return await bcrypt.compare(enteredPassword, this.password);
 };
+
 
 const userModel: Model<IUser> = mongoose.model("User", userSchema);
 export default userModel;
