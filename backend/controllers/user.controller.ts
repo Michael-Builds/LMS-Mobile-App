@@ -9,7 +9,7 @@ import sendEmail from '../utils/sendEmail';
 import { accessTokenOptions, refreshTokenOptions, sendToken } from '../utils/jwt';
 import { redis } from '../utils/redis';
 import { getUserById } from '../services/user.services';
-
+import cloudinary from "cloudinary"
 
 // Account registration handler
 export const accountRegister = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -31,7 +31,7 @@ export const accountRegister = CatchAsyncErrors(async (req: Request, res: Respon
             password,
             avatar: {
                 public_id: "",
-                url: avatar,
+                url: "",
             }
         });
 
@@ -391,6 +391,7 @@ interface IUpdateUserProfile {
 export const updateUserProfile = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { fullname, email, avatar } = req.body as IUpdateUserProfile;
+
         const userId = req.user?._id;
         const user = await userModel.findById(userId);
 
@@ -413,10 +414,23 @@ export const updateUserProfile = CatchAsyncErrors(async (req: Request, res: Resp
         }
 
         // Update avatar if provided
-        if (avatar) {
+        if (avatar && avatar?.url) {
+            // If there's an existing avatar, delete it from Cloudinary
+            if (user.avatar?.public_id) {
+                await cloudinary.v2.uploader.destroy(user.avatar?.public_id);
+            }
+
+            // Upload the new avatar to Cloudinary
+            const myCloud = await cloudinary.v2.uploader.upload(avatar?.url, {
+                folder: "avatars",
+                width: 150,
+                crop: "scale",
+            });
+
+            // Update user avatar details
             user.avatar = {
-                public_id: avatar.public_id || user.avatar.public_id,
-                url: avatar.url || user.avatar.url,
+                public_id: myCloud?.public_id,
+                url: myCloud.secure_url,
             };
         }
 
@@ -435,7 +449,6 @@ export const updateUserProfile = CatchAsyncErrors(async (req: Request, res: Resp
         return next(new ErrorHandler(err.message, 400));
     }
 });
-
 
 // Update user password
 interface IUpdatePassword {
@@ -467,7 +480,7 @@ export const updatePassword = CatchAsyncErrors(async (req: Request, res: Respons
 
         // Set and hash the new password before saving
         user.password = await bcrypt.hash(new_password, 10);
-        
+
         await user.save();
 
         // Convert user ID to a string explicitly and update Redis
