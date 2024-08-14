@@ -94,6 +94,7 @@ export const activateAccount = CatchAsyncErrors(async (req: Request, res: Respon
     // Destructure activation token and activation code from the request body
     const { activation_token, activation_code } = req.body as IActivationRequest;
 
+    console.log("activatio tokn", activation_token, "activatio code", activation_code);
     try {
         // Verify the activation token using the secret key
         const decoded = jwt.verify(
