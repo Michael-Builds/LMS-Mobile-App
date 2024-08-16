@@ -30,8 +30,8 @@ export const accountRegister = CatchAsyncErrors(async (req: Request, res: Respon
             email,
             password,
             avatar: {
-                public_id: "",
-                url: "",
+                public_id: avatar?.public_id,
+                url: avatar?.url,
             }
         });
 
@@ -74,9 +74,9 @@ export const createActivationToken = (user: IUser): IActivationToken => {
 
     // Create a JWT token that includes the user's email and the activation code
     const token = jwt.sign(
-        { user: { email: user.email }, activationCode }, // Payload of the JWT
-        ACTIVATION_SECRET as Secret,                    // Secret key for signing the JWT
-        { expiresIn: "5m" }                             // Token expiration time of 5 minutes
+        { user: { email: user.email }, activationCode },
+        ACTIVATION_SECRET as Secret,
+        { expiresIn: "5m" }
     );
 
     // Return the generated token and the activation code
@@ -94,7 +94,6 @@ export const activateAccount = CatchAsyncErrors(async (req: Request, res: Respon
     // Destructure activation token and activation code from the request body
     const { activation_token, activation_code } = req.body as IActivationRequest;
 
-    console.log("activatio tokn", activation_token, "activatio code", activation_code);
     try {
         // Verify the activation token using the secret key
         const decoded = jwt.verify(

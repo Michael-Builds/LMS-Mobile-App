@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import { ORIGIN } from "./config";
 import { ErrorMiddleware } from './middleware/error';
 import userRouter from './routes/user.route';
+import courseRouter from "./routes/course.route";
 
 export const app = express();
 
@@ -17,6 +18,8 @@ app.use(cors({
 
 // routes
 app.use("/auth/api", userRouter);
+
+app.use("/courses/api", courseRouter);
 
 app.all("*", (req, res, next) => {
     const err = new Error(`Route ${req.originalUrl} not found`) as any;

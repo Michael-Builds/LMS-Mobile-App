@@ -1,34 +1,27 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
+import { IUser } from "./user.model";
+
+interface IThumbnail {
+    public_id: string;
+    url: string;
+}
 
 interface IComment extends Document {
-    user: object;
-    comment: string;
-    commentReplies: IComment[]
+    user: IUser;
+    question: string;
+    questionReplies: IComment[];
 }
 
 interface IReview extends Document {
     user: object;
     rating: number;
     comment: string;
-    commentReplies: IComment[]
+    commentReplies: IComment[];
 }
 
 interface ILink extends Document {
-    title: string
-    url: string
-}
-
-interface ICourseData extends Document {
-    title: string
-    description: string
-    videoUrl: string
-    videoThumbnail: object
-    videoSection: string
-    videoLength: number
-    videoPlayer: string
-    links: ILink[]
-    suggestion: string
-    questions: IComment[]
+    title: string;
+    url: string;
 }
 
 interface ICourse extends Document {
@@ -36,18 +29,17 @@ interface ICourse extends Document {
     description: string;
     price: number;
     estimatedPrice?: number;
-    thumbnail: object
-    tags: string
-    level: string
-    demoUrl: string
-    benefits: { title: string }[]
-    prerequisites: { title: string }[]
-    reviews: IReview[]
-    courseData: ICourseData[]
-    ratings?: number
-    purchased?: number
+    thumbnail: IThumbnail;
+    tags: string[];
+    level: string;
+    demoUrl: string;
+    benefits: { title: string }[];
+    prerequisites: { title: string }[];
+    reviews: IReview[];
+    courseData: ICourseData[];
+    ratings?: number;
+    purchased?: number;
 }
-
 
 const reviewSchema = new Schema<IReview>({
     user: Object,
@@ -65,13 +57,25 @@ const linkSchema = new Schema<ILink>({
 
 const commentSchema = new Schema<IComment>({
     user: Object,
-    comment: String,
-    commentReplies: [Object]
-})
+    question: String,
+    questionReplies: [Object]
+});
+
+interface ICourseData extends Document {
+    title: string;
+    description: string;
+    videoUrl: string;
+    videoThumbnail: object;
+    videoSection: string;
+    videoLength: number;
+    videoPlayer: string;
+    links: ILink[];
+    suggestion: string;
+    questions: IComment[];
+}
 
 const courseDataSchema = new Schema<ICourseData>({
     videoUrl: String,
-    videoThumbnail: Object,
     title: String,
     videoSection: String,
     description: String,
@@ -100,17 +104,18 @@ const courseSchema = new Schema<ICourse>({
     },
     thumbnail: {
         public_id: {
-            required: true,
+            required: false,
             type: String
         },
         url: {
-            required: true,
+            required: false,
             type: String
         }
     },
     tags: {
+        type: [String],
         required: true,
-        type: String
+
     },
     level: {
         type: String,
