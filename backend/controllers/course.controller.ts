@@ -302,7 +302,25 @@ export const addQuestion = CatchAsyncErrors(async (req: Request, res: Response, 
 
         // Save the updated course document to the database
         await course?.save();
-
+        // If the user has an email, send them a confirmation email
+        if (req.user && req.user.email) {
+            const data = {
+                fullname: req.user.fullname,
+                courseName: course?.name,
+                question,
+            };
+            try {
+                await sendEmail({
+                    email: req.user.email,
+                    subject: "Your Question Has Been Submitted",
+                    template: "new-question.ejs",
+                    data,
+                });
+            } catch (err: any) {
+                console.error("Error sending email:", err);
+                return next(new ErrorHandler("Failed to send email notification", 500));
+            }
+        }
         // Respond with success status and the updated course document
         res.status(200).json({
             success: true,
@@ -494,7 +512,7 @@ export const addReviewReply = CatchAsyncErrors(async (req: Request, res: Respons
 
         // Create the reply data object
         const replyData: any = {
-            user: req.user,  
+            user: req.user,
             comment,
         };
 
@@ -518,7 +536,7 @@ export const addReviewReply = CatchAsyncErrors(async (req: Request, res: Respons
                 await sendEmail({
                     email: review.user.email,
                     subject: "New Reply to Your Review!",
-                    template: "review-reply.ejs", 
+                    template: "review-reply.ejs",
                     data,
                 });
             } catch (err: any) {
