@@ -3,11 +3,9 @@ import { CatchAsyncErrors } from "../middleware/catchAsyncError";
 import ErrorHandler from "../utils/ErrorHandler";
 import cloudinary from "cloudinary";
 import courseModel from "../model/course.model";
-import { redis } from "../utils/redis"; // Assuming Redis is configured in a file called redis.ts
+import { redis } from "../utils/redis";
 import { createCourse } from "../services/course.services";
 import mongoose from "mongoose";
-import ejs from "ejs";
-import path from "path";
 import sendEmail from "../utils/sendEmail";
 
 // Controller to handle course upload
@@ -391,5 +389,152 @@ export const addQuestionReply = CatchAsyncErrors(async (req: Request, res: Respo
     }
 });
 
+// Interface to define the structure of the review data
+interface IAddReviewData {
+    comment: string;
+    rating: number;
+    userId: string;
+}
 
+// Add a Review
+export const addReview = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        // Get the list of courses the user is enrolled in
+        const userCourseList = req.user?.courses;
+        const courseId = req.params.id;
 
+        // Check if the user is enrolled in the course they are trying to review
+        const courseExists = userCourseList?.some((course: any) => course._id.toString() === courseId.toString());
+
+        if (!courseExists) {
+            return next(new ErrorHandler("You're not eligible to access this course", 404));
+        }
+
+        // Find the course by ID
+        const course = await courseModel.findById(courseId);
+        const { comment, rating } = req.body as IAddReviewData;
+
+        // Prepare the review data to be added
+        const reviewData: any = {
+            user: req.user,
+            comment,
+            rating
+        };
+
+        // Add the new review to the course
+        course?.reviews.push(reviewData);
+
+        // Calculate the new average rating
+        if (course) {
+            const totalRating = course.reviews.reduce((sum: number, rev: any) => sum + rev.rating, 0);
+            course.ratings = totalRating / course.reviews.length;
+        }
+
+        // Save the updated course with the new review
+        await course?.save();
+
+        // Send a thank-you email to the user if they have an email address
+        if (req.user && req.user.email) {
+            const data = {
+                fullname: req.user.fullname,
+                courseName: course?.name,
+                rating,
+                comment,
+            };
+
+            try {
+                await sendEmail({
+                    email: req.user.email,
+                    subject: "Thank you for your review!",
+                    template: "new-review.ejs",
+                    data
+                });
+            } catch (err: any) {
+                console.error("Error sending email:", err);
+                return next(new ErrorHandler("Failed to send email notification", 500));
+            }
+        }
+
+        // Respond with success and the updated course
+        res.status(200).json({
+            success: true,
+            message: "New Review Added successfully",
+            course
+        });
+    } catch (err: any) {
+        // Handle any errors that occur during the process
+        return next(new ErrorHandler(err.message, 500));
+    }
+});
+
+// adding a review reply
+interface IReviewReplyData {
+    comment: string
+    courseId: string
+    reviewId: string
+}
+
+// Controller to add a reply to a review and notify the reviewer via email
+export const addReviewReply = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        // Destructure the relevant data from the request body
+        const { comment, courseId, reviewId } = req.body as IReviewReplyData;
+
+        // Find the course by its ID
+        const course = await courseModel.findById(courseId);
+        if (!course) {
+            return next(new ErrorHandler("Course Not Found", 404));
+        }
+
+        // Find the specific review within the course by its ID
+        const review = course.reviews?.find((rev: any) => rev._id.toString() === reviewId);
+        if (!review) {
+            return next(new ErrorHandler("Review Not Found", 404));
+        }
+
+        // Create the reply data object
+        const replyData: any = {
+            user: req.user,  
+            comment,
+        };
+
+        // Initialize commentReplies array if it doesn't exist and push the new reply
+        review.commentReplies = review.commentReplies || [];
+        review.commentReplies.push(replyData);
+
+        // Save the updated course document to the database
+        await course.save();
+
+        // Send notification email to the original reviewer if they have an email address
+        if (review.user?.email) {
+            const data = {
+                fullname: review.user.fullname,
+                courseName: course.name,
+                reviewComment: review.comment,
+                replyComment: comment,
+            };
+
+            try {
+                await sendEmail({
+                    email: review.user.email,
+                    subject: "New Reply to Your Review!",
+                    template: "review-reply.ejs", 
+                    data,
+                });
+            } catch (err: any) {
+                console.error("Error sending email:", err);
+                return next(new ErrorHandler("Failed to send email notification", 500));
+            }
+        }
+
+        // Return a success response
+        res.status(200).json({
+            success: true,
+            message: "Review Reply Added Successfully",
+            course,
+        });
+    } catch (err: any) {
+        // Handle any errors by passing them to your global error handler
+        return next(new ErrorHandler(err.message, 500));
+    }
+});
