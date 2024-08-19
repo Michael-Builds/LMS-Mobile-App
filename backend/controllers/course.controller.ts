@@ -263,7 +263,6 @@ export const getCourseByUser = CatchAsyncErrors(async (req: Request, res: Respon
     }
 });
 
-
 interface IAddQuestionData {
     question: string;
     courseId: string;
@@ -338,6 +337,7 @@ interface IAddQuestionReplyData {
     contentId: string;
     questionId: string;
 }
+
 // Controller to add an answer (reply) to a specific question in course content
 export const addQuestionReply = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     try {
