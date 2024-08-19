@@ -328,17 +328,17 @@ export const addQuestionReply = CatchAsyncErrors(async (req: Request, res: Respo
         // Destructure and extract the necessary data from the request body
         const { answer, courseId, contentId, questionId }: IAddQuestionReplyData = req.body;
 
-        // Find the course by its ID
-        const course = await courseModel.findById(courseId);
-        if (!course) {
-            // If course is not found, return a 404 error
-            return next(new ErrorHandler("Course not found", 404));
-        }
-
         // Validate the content ID to ensure it's a valid MongoDB ObjectId
         if (!mongoose.Types.ObjectId.isValid(contentId)) {
             return next(new ErrorHandler("Invalid content ID", 400));
         }
+
+        // Find the course by its ID
+        const course = await courseModel.findById(courseId);
+        if (!course) {
+            return next(new ErrorHandler("Course not found", 404));
+        }
+
 
         // Find the specific content within the course by its ID
         const courseContent = course.courseData.find((item: any) => item._id.equals(contentId));
@@ -365,11 +365,8 @@ export const addQuestionReply = CatchAsyncErrors(async (req: Request, res: Respo
         await course.save();
 
         // If the user replying is not the same as the user who asked the question
-        if (!req.user?._id === question.user._id) {
-            const data = {
-                name: question.user.fullname,
-                title: courseContent.title
-            };
+        if (req.user?._id !== question.user._id) {
+            const data = { fullname: question.user.fullname, title: courseContent.title };
             try {
                 await sendEmail({
                     email: question.user.email,
@@ -381,6 +378,7 @@ export const addQuestionReply = CatchAsyncErrors(async (req: Request, res: Respo
                 return next(new ErrorHandler(err.message, 500));
             }
         }
+
 
         res.status(200).json({
             success: true,
