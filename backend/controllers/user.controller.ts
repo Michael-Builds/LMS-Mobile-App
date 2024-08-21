@@ -8,7 +8,7 @@ import { ACCESS_TOKEN, ACCESS_TOKEN_EXPIRY, ACTIVATION_SECRET, REFRESH_TOKEN, RE
 import sendEmail from '../utils/sendEmail';
 import { accessTokenOptions, refreshTokenOptions, sendToken } from '../utils/jwt';
 import { redis } from '../utils/redis';
-import { getUserById } from '../services/user.services';
+import { getUserById, accountSuspension } from '../services/user.services';
 import cloudinary from "cloudinary"
 import deactivatedModel from '../model/deactivate.model';
 import pendingActivationModel from '../model/pendingActivation.model';
@@ -161,7 +161,6 @@ export const userLogin = CatchAsyncErrors(async (req: Request, res: Response, ne
             if (deactivationDate <= currentDate) {
                 return next(new ErrorHandler("Your account has been deactivated and cannot be accessed. Please contact support for assistance.", 403));
             } else if (deactivatedUser.reason) {
-                // If the user is suspended (and suspension reason is provided)
                 return next(new ErrorHandler(deactivatedUser.reason, 403));
             }
         }
@@ -177,12 +176,49 @@ export const userLogin = CatchAsyncErrors(async (req: Request, res: Response, ne
         if (!user) {
             return next(new ErrorHandler("Invalid email or password", 400));
         }
+        const now = new Date();
+
+        // Check if the user account is locked
+        if (user.lockUntil && user.lockUntil > new Date()) {
+            return next(new ErrorHandler("Your account is locked due to multiple failed login attempts. Please try again later.", 403));
+        }
 
         // Compare the provided password with the stored hashed password
         const isPasswordMatch = await user.comparePassword(password);
         if (!isPasswordMatch) {
-            return next(new ErrorHandler("Invalid password", 400));
+            // Increment login attempts
+            user.loginAttempts += 1;
+            user.failedLoginTimestamps.push(new Date());
+
+
+            // Check if there have been 3 failed attempts in the last 24 hours
+            const recentFailedAttempts = user.failedLoginTimestamps.filter(
+                (timestamp) => now.getTime() - timestamp.getTime() <= 24 * 60 * 60 * 1000
+            );
+
+            if (recentFailedAttempts.length >= 3) {
+                if (!user.lockUntil) {
+                    user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); 
+                } else {
+                    user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); 
+                    if (recentFailedAttempts.length >= 6) {
+                        user.lockUntil = null; 
+                        accountSuspension(user); 
+                        return next(new ErrorHandler("Your account has been suspended due to multiple failed login attempts.", 403));
+                    }
+                }
+                user.loginAttempts = 0; 
+            }
+
+            await user.save();
+            return next(new ErrorHandler("Invalid email or password", 400));
         }
+
+        // Reset login attempts on successful login
+        user.loginAttempts = 0;
+        user.lockUntil = null;
+        user.failedLoginTimestamps = []; 
+        await user.save();
 
         // If the credentials are correct, generate tokens and send them in the response
         sendToken(user, 200, res);

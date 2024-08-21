@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Suspended Notification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200..700&family=Nunito:wght@200..700&display=swap"
+      rel="stylesheet"
+    />
+    <style type="text/css">
+      body {
+        font-family: "Nunito", sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 700px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        color: #51545e;
+      }
+      .header {
+        background-color: #ff4d4d;
+        color: #ffffff;
+        text-align: center;
+        padding: 20px;
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .content {
+        padding: 20px;
+      }
+      .content h4 {
+        font-size: 18px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-weight: 700;
+        color: #333;
+      }
+      .content p {
+        font-size: 16px;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .content p.important {
+        color: #ff4d4d;
+        font-weight: bold;
+      }
+      .footer {
+        background-color: #f4f4f4;
+        color: #6b6e76;
+        text-align: center;
+        padding: 20px;
+        font-size: 14px;
+      }
+      .footer a {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Account Suspended</h1>
+      </div>
+      <div class="content">
+        <h4>Dear <%= fullname %>,</h4>
+        <p>We regret to inform you that your account has been temporarily suspended.</p>
+        <p class="important">Reason: Multiple failed login attempts.</p>
+        <p>
+          After three unsuccessful login attempts within a 24-hour period, your account was locked. Unfortunately, due to another failed attempt after the lock period, your account has been suspended to protect your security.
+        </p>
+        <p>
+          If you believe this is a mistake or need further assistance, please contact our support team immediately.
+        </p>
+      </div>
+      <div class="footer">
+        <p>
+          We're here to help! Contact us at
+          <a href="mailto:support@example.com">support@example.com</a>
+        </p>
+        <p>&copy; 2024 HTU LMS. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>

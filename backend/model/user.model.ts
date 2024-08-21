@@ -23,6 +23,9 @@ export interface IUser extends Document {
     deactivationDate?: Date;
     recoveryToken?: string;
     recoveryTokenExpiry?: Date;
+    loginAttempts: number;
+    lockUntil: Date | null;
+    failedLoginTimestamps: Date[];
 }
 
 const userSchema: Schema<IUser> = new mongoose.Schema({
@@ -72,6 +75,19 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
     },
     recoveryTokenExpiry: {
         type: Date,
+    },
+    loginAttempts: {
+        type: Number,
+        required: true,
+        default: 0,
+    },
+    lockUntil: {
+        type: Date,
+        default: null,
+    },
+    failedLoginTimestamps: {
+        type: [Date],
+        default: []
     },
 }, { timestamps: true })
 
