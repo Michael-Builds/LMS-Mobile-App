@@ -10,6 +10,8 @@ import { accessTokenOptions, refreshTokenOptions, sendToken } from '../utils/jwt
 import { redis } from '../utils/redis';
 import { getUserById } from '../services/user.services';
 import cloudinary from "cloudinary"
+import deactivatedModel from '../model/deactivate.model';
+import pendingActivationModel from '../model/pendingActivation.model';
 
 // Account registration handler
 export const accountRegister = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -57,7 +59,7 @@ export const accountRegister = CatchAsyncErrors(async (req: Request, res: Respon
 
     } catch (error: any) {
         // Handle any errors that occur during registration
-        return next(new ErrorHandler(error.message || "Registration failed", 400));
+        return next(new ErrorHandler(error.message || "Registration failed", 500));
     }
 });
 
@@ -143,35 +145,48 @@ interface ILoginRequest {
 // User login handler
 export const userLogin = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // Destructure email and password from the request body
         const { email, password } = req.body as ILoginRequest;
 
-        // Check if both email and password are provided, if not, return an error
         if (!email || !password) {
             return next(new ErrorHandler("Please enter email and password", 400));
         }
 
-        // Find the user in the database by email, including the password field
-        const user = await userModel.findOne({ email }).select("+password");
+        // Check if the user has been deactivated
+        const deactivatedUser = await deactivatedModel.findOne({ email });
+        if (deactivatedUser) {
+            const deactivationDate = new Date(deactivatedUser.deactivatedAt);
+            const deactivationDelay = 7 * 24 * 60 * 60 * 1000; 
+            const deactivationEndDate = new Date(deactivationDate.getTime() + deactivationDelay);
 
-        // If the user is not found, return an error
+            // Check if the current date is past the deactivation end date
+            if (new Date() > deactivationEndDate) {
+                return next(new ErrorHandler("Your account has been deactivated and cannot be accessed. Please contact support for assistance.", 403));
+            } else {
+                return next(new ErrorHandler("Your account is scheduled for deactivation. Please contact support if this is an error.", 403));
+            }
+        }
+
+        // Check if there's a pending activation (account recovery request)
+        const pendingActivation = await pendingActivationModel.findOne({ email });
+        if (pendingActivation) {
+            return next(new ErrorHandler("Your account recovery request is pending. Please wait for admin approval.", 403));
+        }
+
+        // Find the user in the database
+        const user = await userModel.findOne({ email }).select("+password");
         if (!user) {
             return next(new ErrorHandler("Invalid email or password", 400));
         }
 
         // Compare the provided password with the stored hashed password
         const isPasswordMatch = await user.comparePassword(password);
-
-        // If the password does not match, return an error
         if (!isPasswordMatch) {
             return next(new ErrorHandler("Invalid password", 400));
         }
 
         // If the credentials are correct, generate tokens and send them in the response
         sendToken(user, 200, res);
-
     } catch (err: any) {
-        // Pass any errors that occur to the global error handler
         return next(new ErrorHandler(err.message, 400));
     }
 });
@@ -210,7 +225,6 @@ export const userLogout = CatchAsyncErrors(async (req: Request, res: Response, n
     }
 });
 
-
 // Controller to authorize roles for specific routes
 export const authorizeRoles = (...roles: string[]) => {
     return (req: Request, res: Response, next: NextFunction) => {
@@ -231,7 +245,6 @@ export const authorizeRoles = (...roles: string[]) => {
         }
     };
 };
-
 
 // Update access token handler
 export const updateAccessToken = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -277,7 +290,6 @@ export const updateAccessToken = CatchAsyncErrors(async (req: Request, res: Resp
         return next(new ErrorHandler("Authorization failed", 500));
     }
 });
-
 
 // get user infor handler
 export const getUserInfo = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -341,7 +353,6 @@ export const getUserInfo = CatchAsyncErrors(async (req: Request, res: Response, 
         return next(new ErrorHandler(err.message, 400));
     }
 });
-
 
 interface ISocialAuthBody {
     fullname: string
@@ -450,7 +461,7 @@ export const updateUserProfile = CatchAsyncErrors(async (req: Request, res: Resp
     }
 });
 
-// Update user password
+// Update user password interface
 interface IUpdatePassword {
     old_password: string;
     new_password: string;
@@ -493,5 +504,292 @@ export const updatePassword = CatchAsyncErrors(async (req: Request, res: Respons
 
     } catch (err: any) {
         return next(new ErrorHandler(err.message, 400));
+    }
+});
+
+// Fetch all users handler
+export const getAllUsers = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        // Fetch all users from the database
+        const users = await userModel.find();
+
+        // Send a response with the retrieved users
+        res.status(200).json({
+            success: true,
+            count: users.length,
+            users,
+        });
+    } catch (err: any) {
+        // Handle any errors that occur during fetching users
+        return next(new ErrorHandler(err.message, 500));
+    }
+});
+
+// Delete user by Admin
+export const deleteUser = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.params.id;
+
+        // Find the user by ID
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return next(new ErrorHandler("User not found", 404));
+        }
+
+        // Remove user avatar from Cloudinary if exists
+        if (user.avatar && user.avatar.public_id) {
+            await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+        }
+
+        // Delete the user from the database
+        await userModel.findByIdAndDelete(userId);
+
+        // Remove user session from Redis
+        await redis.del(userId);
+
+        res.status(200).json({
+            success: true,
+            message: "User deleted successfully",
+        });
+    } catch (err: any) {
+        return next(new ErrorHandler(err.message, 500));
+    }
+});
+
+// User Account deactivation handler
+export const deactivateAccount = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user?._id;
+        const user = await userModel.findById(userId);
+
+        if (!user) {
+            return next(new ErrorHandler("User not found", 404));
+        }
+
+        // Check if the user has already requested deactivation
+        if (user.hasRequestedDeactivation) {
+            return next(new ErrorHandler("You have already requested account deactivation.", 400));
+        }
+
+        // Ensure fullname exists
+        if (!user.fullname) {
+            return next(new ErrorHandler("User's fullname not found", 400));
+        }
+
+        // Schedule account deactivation after 1 week
+        const deletionDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 1 week from now
+
+        // Send email to user notifying them of the deactivation
+        await sendEmail({
+            email: user.email,
+            subject: "Account Deactivation Scheduled",
+            template: "deactivation-email.ejs",
+            data: {
+                fullname: user.fullname,
+                deletionDate: deletionDate.toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                }),
+            },
+        });
+
+        // Move user to the deactivated users collection
+        const deactivatedUser = new deactivatedModel({
+            fullname: user.fullname,
+            email: user.email,
+            avatar: user.avatar,
+            deactivatedAt: new Date(),
+            isVerified: user.isVerified,  
+        });
+
+        await deactivatedUser.save();
+
+        // Delete the user from the main users collection
+        await userModel.findByIdAndDelete(userId);
+
+        res.status(200).json({
+            success: true,
+            message: "Your account will be deactivated after one week. Check your email for more details.",
+        });
+    } catch (err: any) {
+        return next(new ErrorHandler(err.message, 500));
+    }
+});
+
+
+// User Account recovery request handler
+export const requestAccountRecovery = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { reason } = req.body;
+        const userId = req.user?._id;
+        const user = await deactivatedModel.findOne({ _id: userId });
+
+        if (!user) {
+            return next(new ErrorHandler("User not found in deactivated records", 404));
+        }
+
+        // Check if a recovery request already exists
+        const existingRequest = await pendingActivationModel.findOne({ email: user.email });
+        if (existingRequest) {
+            return next(new ErrorHandler("You have already requested account recovery.", 400));
+        }
+
+        // Create a recovery request
+        const pendingActivation = new pendingActivationModel({
+            fullname: user.fullname,
+            email: user.email,
+            avatar: user.avatar,
+            reason: reason,
+        });
+
+        await pendingActivation.save();
+
+        // Send email notification to the user
+        await sendEmail({
+            email: user.email,
+            subject: "Account Recovery Request Received",
+            template: "account-recovery-request.ejs",
+            data: {
+                fullname: user.fullname,
+                reason,
+            },
+        });
+        res.status(200).json({
+            success: true,
+            message: "Your account recovery request has been submitted. An admin will review it shortly.",
+        });
+    } catch (err: any) {
+        return next(new ErrorHandler(err.message, 500));
+    }
+});
+
+// Admin Approve Account Recovery
+export const approveAccountRecovery = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const request = await pendingActivationModel.findById(id);
+
+        if (!request) {
+            return next(new ErrorHandler("Recovery request not found", 404));
+        }
+
+        const deactivatedUser = await deactivatedModel.findOne({ email: request.email });
+
+        if (!deactivatedUser) {
+            return next(new ErrorHandler("User not found in deactivated records", 404));
+        }
+
+        const restoredUser = new userModel({
+            fullname: deactivatedUser.fullname,
+            email: deactivatedUser.email,
+            avatar: deactivatedUser.avatar,
+            isVerified: deactivatedUser.isVerified,
+        });
+
+        await restoredUser.save();
+
+        await deactivatedModel.deleteOne({ email: request.email });
+        await pendingActivationModel.findByIdAndDelete(id);
+
+        // Send email notification to the user
+        await sendEmail({
+            email: restoredUser.email,
+            subject: "Account Recovery Approved",
+            template: "account-recovery-approved.ejs",
+            data: {
+                fullname: restoredUser.fullname,
+            },
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "User account has been successfully restored.",
+        });
+    } catch (err: any) {
+        return next(new ErrorHandler(err.message, 500));
+    }
+});
+
+// Admin Reject Account Recovery
+export const rejectAccountRecovery = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const request = await pendingActivationModel.findById(id);
+
+        if (!request) {
+            return next(new ErrorHandler("Recovery request not found", 404));
+        }
+
+        // Send email notification to the user before deletion
+        await sendEmail({
+            email: request.email,
+            subject: "Account Recovery Request Denied",
+            template: "account-recovery-rejected.ejs",
+            data: {
+                fullname: request.fullname,
+                reason: request.reason,
+            },
+        });
+
+        await pendingActivationModel.findByIdAndDelete(id);
+
+        res.status(200).json({
+            success: true,
+            message: "Recovery request has been rejected and removed.",
+        });
+    } catch (err: any) {
+        return next(new ErrorHandler(err.message, 500));
+    }
+});
+
+// Admin suspending account
+export const suspendAccount = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+
+        // Find the user by ID
+        const user = await userModel.findById(id);
+
+        if (!user) {
+            return next(new ErrorHandler("User not found", 404));
+        }
+
+        // Move user to the deactivated users collection with a suspension reason
+        const deactivatedUser = new deactivatedModel({
+            fullname: user.fullname,
+            email: user.email,
+            avatar: user.avatar,
+            deactivatedAt: new Date(),
+            isVerified: user.isVerified,
+            reason,  
+        });
+
+        await deactivatedUser.save();
+
+        // Delete the user from the main users collection
+        await userModel.findByIdAndDelete(id);
+
+        // Remove user session from Redis
+        await redis.del(id);
+
+        // Send email notification to the user
+        await sendEmail({
+            email: user.email,
+            subject: "Account Suspension Notification",
+            template: "account-suspended.ejs",
+            data: {
+                fullname: user.fullname,
+                reason,
+            },
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "User account has been suspended.",
+        });
+    } catch (err: any) {
+        return next(new ErrorHandler(err.message, 500));
     }
 });

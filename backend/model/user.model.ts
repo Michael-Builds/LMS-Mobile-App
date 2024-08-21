@@ -15,10 +15,14 @@ export interface IUser extends Document {
     }
     role: string
     isVerified: boolean
-    courses: Array<{ courseId: string }>
+    courses: Array<{ courseId: mongoose.Types.ObjectId }>;
     comparePassword: (password: string) => Promise<boolean>
     signAccessToken: () => string
     signRefreshToken: () => string
+    hasRequestedDeactivation: boolean;
+    deactivationDate?: Date;
+    recoveryToken?: string;
+    recoveryTokenExpiry?: Date;
 }
 
 const userSchema: Schema<IUser> = new mongoose.Schema({
@@ -55,7 +59,20 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
         {
             courseId: String
         }
-    ]
+    ],
+    hasRequestedDeactivation: {
+        type: Boolean,
+        default: false,
+    },
+    deactivationDate: {
+        type: Date,
+    },
+    recoveryToken: {
+        type: String,
+    },
+    recoveryTokenExpiry: {
+        type: Date,
+    },
 }, { timestamps: true })
 
 

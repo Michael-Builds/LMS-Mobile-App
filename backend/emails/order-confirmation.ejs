@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200..700&family=Nunito:wght@200..700&display=swap" rel="stylesheet">
+    <style type="text/css">
+        body {
+            font-family: "Nunito", sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: #51545e;
+        }
+        .header {
+            background-color: #007bff;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .header p {
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .content {
+            padding: 20px;
+        }
+        .content h4 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 700;
+        }
+        .order-details {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .order-details th,
+        .order-details td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eaeaea;
+        }
+        .order-details th {
+            background-color: #f4f4f4;
+            font-weight: 600;
+            text-align: center;
+        }
+        .order-details td {
+            text-align: center;
+        }
+        .order-details tr:last-child td {
+            border-bottom: none;
+        }
+        .total {
+            font-size: 18px;
+            font-weight: 700;
+            text-align: right;
+            padding-top: 20px;
+            border-bottom: 1px solid #eaeaea;
+            margin-top: 20px;
+        }
+        .footer {
+            background-color: #f4f4f4;
+            color: #6b6e76;
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Your Course Order is Confirmed</h1>
+            <p>And we're just as excited as you are!</p>
+        </div>
+        <div class="content">
+            <h4>Here's what you ordered:</h4>
+            <table class="order-details">
+                <tr>
+                    <th>Order #</th>
+                    <th>Item</th>
+                    <th>Date</th>
+                    <th>Cost</th>
+                    <th>Qty</th>
+                    <th>Subtotal</th>
+                </tr>
+                <tr>
+                    <td><%= order._id %></td>
+                    <td><%= order.name %></td>
+                    <td><%= order.date %></td>
+                    <td>$<%= order.price %></td>
+                    <td>1</td>
+                    <td>$<%= order.price %></td>
+                </tr>
+            </table>
+            <p class="total">Total Amount: $<%= order.price %></p>
+        </div>
+        <div class="footer">
+            <p>
+                If you have any questions, please contact our support team at
+                <a href="mailto:michaelkpantiramp@gmail.com">michaelkpantiramp@gmail.com</a>
+            </p>
+            <p>&copy; 2024 HTU LMS. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
