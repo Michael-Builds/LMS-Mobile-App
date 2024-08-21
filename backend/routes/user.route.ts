@@ -16,7 +16,8 @@ import {
     requestAccountRecovery,
     approveAccountRecovery,
     rejectAccountRecovery,
-    suspendAccount
+    suspendAccount,
+    updateUserRole
 } from '../controllers/user.controller';
 import { isAuthenticated } from '../middleware/auth.middleware';
 import { getNotifications, updateNotifications } from '../controllers/notification.controller';
@@ -42,7 +43,7 @@ userRouter.post("/recover-account", isAuthenticated, requestAccountRecovery);
 
 // Admin Routes
 userRouter.get("/get-users", isAuthenticated, authorizeRoles("admin"), getAllUsers);
-userRouter.delete("/user/:id", isAuthenticated, authorizeRoles("admin"), deleteUser);
+userRouter.delete("/delete-user/:id", isAuthenticated, authorizeRoles("admin"), deleteUser);
 
 // Admin routes for approving/rejecting account recovery
 userRouter.post("/approve-recovery/:id", isAuthenticated, authorizeRoles("admin"), approveAccountRecovery);
@@ -52,5 +53,9 @@ userRouter.post("/suspend-user/:id", isAuthenticated, authorizeRoles("admin"), s
 // Admin routes for for get notifications and updating notifications
 userRouter.get("/get-notifications", isAuthenticated, authorizeRoles("admin"), getNotifications)
 userRouter.put("/update-notifications/:id", isAuthenticated, authorizeRoles("admin"), updateNotifications)
+
+
+// Admin Route to Update User Role
+userRouter.put("/update-role", isAuthenticated, authorizeRoles("admin"), updateUserRole);
 
 export default userRouter;

@@ -204,7 +204,7 @@ export const deleteCourse = CatchAsyncErrors(async (req: Request, res: Response,
 
         // Remove the course from Redis cache
         await redis.del(courseId);
-        await redis.del("allCourses"); // Invalidate all courses cache as well
+        // await redis.del("allCourses"); 
 
         // Send a success response
         res.status(200).json({

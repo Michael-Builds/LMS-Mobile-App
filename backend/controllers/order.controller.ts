@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { CatchAsyncErrors } from "../middleware/catchAsyncError";
 import ErrorHandler from "../utils/ErrorHandler";
-import { IOrder } from "../model/order.model";
-import userModel from "../model/user.model";
+import orderModel, { IOrder } from "../model/order.model";
+import userModel, { IUser } from "../model/user.model";
 import courseModel from "../model/course.model";
 import sendEmail from "../utils/sendEmail";
 import notificatioModel from "../model/notification.model";
@@ -86,5 +86,88 @@ export const createOrder = CatchAsyncErrors(async (req: Request, res: Response, 
 
     } catch (error: any) {
         return next(new ErrorHandler(error.message, 400));
+    }
+});
+
+// Get All Orders
+export const getAllOrders = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        // Fetch all orders from the database
+        const orders = await orderModel.find();
+
+        if (!orders || orders.length === 0) {
+            return next(new ErrorHandler("No orders found", 404));
+        }
+
+        // Send response with the fetched orders
+        res.status(200).json({
+            success: true,
+            count: orders.length,
+            orders,
+        });
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+});
+
+
+// Get All Orders for the Authenticated User
+export const getUserOrders = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        // Fetch all orders placed by the authenticated user
+        const orders = await orderModel.find({ userId: req.user?._id });
+
+        if (!orders || orders.length === 0) {
+            return next(new ErrorHandler("No orders found for this user", 404));
+        }
+
+        // Send response with the fetched orders
+        res.status(200).json({
+            success: true,
+            count: orders.length,
+            orders,
+            message:"Orders fetched successfully"
+        });
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+});
+
+// Delete Order by ID for the Authenticated User
+export const deleteUserOrder = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+
+        // Assert that req.user is of type IUser
+        const userId = (req.user as IUser)._id;
+
+        // Find the order by ID
+        const order = await orderModel.findById(id);
+
+        if (!order) {
+            return next(new ErrorHandler("Order not found", 404));
+        }
+
+        // Check if the order belongs to the authenticated user
+        if (order.userId.toString() !== userId?.toString()) {
+            return next(new ErrorHandler("You are not authorized to delete this order", 403));
+        }
+
+        // Remove the order from the database
+        await orderModel.findByIdAndDelete(id);
+
+        // Optionally, remove the course from the user's profile if needed
+        const user = await userModel.findById(userId);
+        if (user) {
+            user.courses = user.courses.filter(course => course.courseId.toString() !== order.courseId.toString());
+            await user.save();
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Order deleted successfully",
+        });
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 500));
     }
 });

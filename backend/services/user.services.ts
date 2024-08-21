@@ -53,3 +53,38 @@ export const accountSuspension = async (user: IUser) => {
 
     console.log(`User ${user.email} has been suspended.`);
 };
+
+export const updateUserRoleService = async (userId: string, newRole: string) => {
+    // Validate new role (if applicable)
+    const validRoles = ['admin', 'student', 'tutor'];
+    if (!validRoles.includes(newRole)) {
+        throw new ErrorHandler(`Invalid role: ${newRole}`, 400);
+    }
+
+    // Update the user's role in the database
+    const user = await userModel.findByIdAndUpdate(userId, { role: newRole }, { new: true });
+
+    if (!user) {
+        throw new ErrorHandler("User not found", 404);
+    }
+
+    // Create a notification for the user
+    await notificatioModel.create({
+        user: user._id,
+        title: "Role Updated",
+        message: `Your role has been updated to ${newRole}.`,
+    });
+
+    // Send an email to the user about the role update
+    await sendEmail({
+        email: user.email,
+        subject: "Role Update Notification",
+        template: "role-update.ejs", 
+        data: {
+            fullname: user.fullname,
+            role: newRole,
+        },
+    });
+
+    return user;
+};

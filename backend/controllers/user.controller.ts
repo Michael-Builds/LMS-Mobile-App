@@ -8,7 +8,7 @@ import { ACCESS_TOKEN, ACCESS_TOKEN_EXPIRY, ACTIVATION_SECRET, REFRESH_TOKEN, RE
 import sendEmail from '../utils/sendEmail';
 import { accessTokenOptions, refreshTokenOptions, sendToken } from '../utils/jwt';
 import { redis } from '../utils/redis';
-import { getUserById, accountSuspension } from '../services/user.services';
+import { getUserById, accountSuspension, updateUserRoleService } from '../services/user.services';
 import cloudinary from "cloudinary"
 import deactivatedModel from '../model/deactivate.model';
 import pendingActivationModel from '../model/pendingActivation.model';
@@ -198,16 +198,16 @@ export const userLogin = CatchAsyncErrors(async (req: Request, res: Response, ne
 
             if (recentFailedAttempts.length >= 3) {
                 if (!user.lockUntil) {
-                    user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); 
+                    user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
                 } else {
-                    user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); 
+                    user.lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
                     if (recentFailedAttempts.length >= 6) {
-                        user.lockUntil = null; 
-                        accountSuspension(user); 
+                        user.lockUntil = null;
+                        accountSuspension(user);
                         return next(new ErrorHandler("Your account has been suspended due to multiple failed login attempts.", 403));
                     }
                 }
-                user.loginAttempts = 0; 
+                user.loginAttempts = 0;
             }
 
             await user.save();
@@ -217,7 +217,7 @@ export const userLogin = CatchAsyncErrors(async (req: Request, res: Response, ne
         // Reset login attempts on successful login
         user.loginAttempts = 0;
         user.lockUntil = null;
-        user.failedLoginTimestamps = []; 
+        user.failedLoginTimestamps = [];
         await user.save();
 
         // If the credentials are correct, generate tokens and send them in the response
@@ -850,5 +850,26 @@ export const suspendAccount = CatchAsyncErrors(async (req: Request, res: Respons
         });
     } catch (err: any) {
         return next(new ErrorHandler(err.message, 500));
+    }
+});
+
+
+// Controller for updating user role
+export const updateUserRole = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    const { userId, newRole } = req.body;
+
+    try {
+        // Call the service function and wait for the result
+        const updatedUser = await updateUserRoleService(userId, newRole);
+
+        // Send a success response
+        res.status(200).json({
+            success: true,
+            message: "User role updated successfully",
+            user: updatedUser,
+        });
+    } catch (error: any) {
+        // Handle errors
+        next(new ErrorHandler(error.message, error.statusCode || 500));
     }
 });

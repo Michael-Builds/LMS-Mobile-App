@@ -27,12 +27,13 @@
         color: #51545e;
       }
       .header {
-        background-color: #ff4d4d;
+        background-color: #007bff;
         color: #ffffff;
         text-align: center;
         padding: 20px;
         font-size: 16px;
         font-weight: 700;
+        border-radius: 8px 8px 0 0;
       }
       .content {
         padding: 20px;
@@ -74,13 +75,20 @@
       </div>
       <div class="content">
         <h4>Dear <%= fullname %>,</h4>
-        <p>We regret to inform you that your account has been temporarily suspended.</p>
+        <p>
+          We regret to inform you that your account has been temporarily
+          suspended.
+        </p>
         <p class="important">Reason: Multiple failed login attempts.</p>
         <p>
-          After three unsuccessful login attempts within a 24-hour period, your account was locked. Unfortunately, due to another failed attempt after the lock period, your account has been suspended to protect your security.
+          After three unsuccessful login attempts within a 24-hour period, your
+          account was locked. Unfortunately, due to another failed attempt after
+          the lock period, your account has been suspended to protect your
+          security.
         </p>
         <p>
-          If you believe this is a mistake or need further assistance, please contact our support team immediately.
+          If you believe this is a mistake or need further assistance, please
+          contact our support team immediately.
         </p>
       </div>
       <div class="footer">
