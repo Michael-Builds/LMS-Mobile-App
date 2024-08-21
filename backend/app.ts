@@ -7,6 +7,7 @@ import userRouter from './routes/user.route';
 import courseRouter from "./routes/course.route";
 import orderRouter from './routes/order.route';
 import cartRouter from './routes/cart.route';
+import "./crons/cronjobs"
 
 export const app = express();
 

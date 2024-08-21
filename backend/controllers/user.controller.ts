@@ -12,6 +12,7 @@ import { getUserById } from '../services/user.services';
 import cloudinary from "cloudinary"
 import deactivatedModel from '../model/deactivate.model';
 import pendingActivationModel from '../model/pendingActivation.model';
+import notificatioModel from '../model/notification.model';
 
 // Account registration handler
 export const accountRegister = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -142,7 +143,7 @@ interface ILoginRequest {
     password: string;
 }
 
-// User login handler
+// User login handler with suspension and deactivation checks
 export const userLogin = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email, password } = req.body as ILoginRequest;
@@ -151,18 +152,17 @@ export const userLogin = CatchAsyncErrors(async (req: Request, res: Response, ne
             return next(new ErrorHandler("Please enter email and password", 400));
         }
 
-        // Check if the user has been deactivated
+        // Check if the user has been deactivated (suspended or past deactivation date)
         const deactivatedUser = await deactivatedModel.findOne({ email });
         if (deactivatedUser) {
-            const deactivationDate = new Date(deactivatedUser.deactivatedAt);
-            const deactivationDelay = 7 * 24 * 60 * 60 * 1000; 
-            const deactivationEndDate = new Date(deactivationDate.getTime() + deactivationDelay);
+            const currentDate = new Date();
+            const deactivationDate = deactivatedUser.deactivatedAt;
 
-            // Check if the current date is past the deactivation end date
-            if (new Date() > deactivationEndDate) {
+            if (deactivationDate <= currentDate) {
                 return next(new ErrorHandler("Your account has been deactivated and cannot be accessed. Please contact support for assistance.", 403));
-            } else {
-                return next(new ErrorHandler("Your account is scheduled for deactivation. Please contact support if this is an error.", 403));
+            } else if (deactivatedUser.reason) {
+                // If the user is suspended (and suspension reason is provided)
+                return next(new ErrorHandler(deactivatedUser.reason, 403));
             }
         }
 
@@ -571,22 +571,29 @@ export const deactivateAccount = CatchAsyncErrors(async (req: Request, res: Resp
             return next(new ErrorHandler("You have already requested account deactivation.", 400));
         }
 
-        // Ensure fullname exists
-        if (!user.fullname) {
-            return next(new ErrorHandler("User's fullname not found", 400));
-        }
-
         // Schedule account deactivation after 1 week
-        const deletionDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 1 week from now
+        const deactivationDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 1 week from now
 
-        // Send email to user notifying them of the deactivation
+        // Mark the user for deactivation
+        user.deactivationDate = deactivationDate;
+        user.hasRequestedDeactivation = true;
+        await user.save();
+
+        // Create a notification for account deactivation
+        await notificatioModel.create({
+            user: user._id,
+            title: "Account Deactivation Requested",
+            message: "Your account is scheduled for deactivation in 7 days.",
+        });
+
+        // Send an email notification to the user
         await sendEmail({
             email: user.email,
             subject: "Account Deactivation Scheduled",
             template: "deactivation-email.ejs",
             data: {
                 fullname: user.fullname,
-                deletionDate: deletionDate.toLocaleDateString("en-US", {
+                deletionDate: deactivationDate.toLocaleDateString("en-US", {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
@@ -594,29 +601,14 @@ export const deactivateAccount = CatchAsyncErrors(async (req: Request, res: Resp
             },
         });
 
-        // Move user to the deactivated users collection
-        const deactivatedUser = new deactivatedModel({
-            fullname: user.fullname,
-            email: user.email,
-            avatar: user.avatar,
-            deactivatedAt: new Date(),
-            isVerified: user.isVerified,  
-        });
-
-        await deactivatedUser.save();
-
-        // Delete the user from the main users collection
-        await userModel.findByIdAndDelete(userId);
-
         res.status(200).json({
             success: true,
-            message: "Your account will be deactivated after one week. Check your email for more details.",
+            message: "Your account is scheduled for deactivation in 7 days. Check your email for more details.",
         });
     } catch (err: any) {
         return next(new ErrorHandler(err.message, 500));
     }
 });
-
 
 // User Account recovery request handler
 export const requestAccountRecovery = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -644,6 +636,13 @@ export const requestAccountRecovery = CatchAsyncErrors(async (req: Request, res:
         });
 
         await pendingActivation.save();
+
+        // Create a notification for account recovery request
+        await notificatioModel.create({
+            user: userId,
+            title: "Account Recovery Requested",
+            message: `New account recovery request from ${user.fullname}`,
+        });
 
         // Send email notification to the user
         await sendEmail({
@@ -680,6 +679,7 @@ export const approveAccountRecovery = CatchAsyncErrors(async (req: Request, res:
             return next(new ErrorHandler("User not found in deactivated records", 404));
         }
 
+        // Move the user back to the main user collection
         const restoredUser = new userModel({
             fullname: deactivatedUser.fullname,
             email: deactivatedUser.email,
@@ -689,8 +689,16 @@ export const approveAccountRecovery = CatchAsyncErrors(async (req: Request, res:
 
         await restoredUser.save();
 
+        // Remove the user from the deactivated users collection
         await deactivatedModel.deleteOne({ email: request.email });
         await pendingActivationModel.findByIdAndDelete(id);
+
+        // Create a notification for account recovery approval
+        await notificatioModel.create({
+            user: restoredUser._id,
+            title: "Account Recovery Approved",
+            message: `Your account recovery has been approved for ${deactivatedUser.fullname}`,
+        });
 
         // Send email notification to the user
         await sendEmail({
@@ -720,6 +728,13 @@ export const rejectAccountRecovery = CatchAsyncErrors(async (req: Request, res: 
         if (!request) {
             return next(new ErrorHandler("Recovery request not found", 404));
         }
+
+        // Create a notification for account recovery rejection
+        await notificatioModel.create({
+            user: req.user?._id,
+            title: "Account Recovery Rejected",
+            message: `Account recovery rejection for ${request.fullname}`,
+        });
 
         // Send email notification to the user before deletion
         await sendEmail({
@@ -763,7 +778,7 @@ export const suspendAccount = CatchAsyncErrors(async (req: Request, res: Respons
             avatar: user.avatar,
             deactivatedAt: new Date(),
             isVerified: user.isVerified,
-            reason,  
+            reason,
         });
 
         await deactivatedUser.save();
@@ -773,6 +788,14 @@ export const suspendAccount = CatchAsyncErrors(async (req: Request, res: Respons
 
         // Remove user session from Redis
         await redis.del(id);
+
+
+        // Create a notification for account recovery rejection
+        await notificatioModel.create({
+            user: req.user?._id,
+            title: "Account Recovery Rejected",
+            message: `Account recovery rejection for ${user.fullname}`,
+        });
 
         // Send email notification to the user
         await sendEmail({

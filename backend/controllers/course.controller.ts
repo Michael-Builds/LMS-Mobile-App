@@ -7,6 +7,7 @@ import { redis } from "../utils/redis";
 import { createCourse } from "../services/course.services";
 import mongoose from "mongoose";
 import sendEmail from "../utils/sendEmail";
+import notificatioModel from "../model/notification.model";
 
 // Controller to handle course upload
 export const uploadCourse = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -299,6 +300,11 @@ export const addQuestion = CatchAsyncErrors(async (req: Request, res: Response, 
         // Add the new question to the content's questions array
         courseContent.questions.push(newQuestion)
 
+        await notificatioModel.create({
+            user: req.user?._id,
+            title: "New Question Recieved",
+            message: `You have a new question in ${courseContent?.title}`
+        })
         // Save the updated course document to the database
         await course?.save();
         // If the user has an email, send them a confirmation email
@@ -380,6 +386,12 @@ export const addQuestionReply = CatchAsyncErrors(async (req: Request, res: Respo
         // Save the updated course document to the database
         await course.save();
 
+        await notificatioModel.create({
+            user: req.user?._id,
+            title: "New Question Reply",
+            message: `You have a new question reply in ${courseContent?.title}`
+        })
+
         // If the user replying is not the same as the user who asked the question
         if (req.user?._id !== question.user._id) {
             const data = { fullname: question.user.fullname, title: courseContent.title };
@@ -447,6 +459,12 @@ export const addReview = CatchAsyncErrors(async (req: Request, res: Response, ne
             const totalRating = course.reviews.reduce((sum: number, rev: any) => sum + rev.rating, 0);
             course.ratings = totalRating / course.reviews.length;
         }
+
+        await notificatioModel.create({
+            user: req.user?._id,
+            title: "New Review",
+            message: `You have a new review in ${course?.name}`
+        })
 
         // Save the updated course with the new review
         await course?.save();
@@ -531,6 +549,13 @@ export const addReviewReply = CatchAsyncErrors(async (req: Request, res: Respons
                 reviewComment: review.comment,
                 replyComment: comment,
             };
+
+
+            await notificatioModel.create({
+                user: req.user?._id,
+                title: "New Review",
+                message: `You have a new review reply in ${course.name}`
+            })
 
             try {
                 await sendEmail({

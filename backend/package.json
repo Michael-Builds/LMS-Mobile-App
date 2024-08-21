@@ -17,6 +17,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.6",
+    "@types/node-cron": "^3.0.11",
     "bcrypt": "^5.1.1",
     "cloudinary": "^2.4.0",
     "colors": "^1.4.0",
@@ -28,6 +29,7 @@
     "jest-mock-req-res": "^1.0.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.5.2",
+    "node-cron": "^3.0.3",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.5.4"
   },
