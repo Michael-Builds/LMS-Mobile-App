@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Suspension - Your Application</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f7f7f7;
+        margin: 0;
+        padding: 0;
+        color: #333;
+      }
+
+      .email-container {
+        max-width: 600px;
+        margin: 50px auto;
+        background-color: #ffffff;
+        border: 1px solid #dddddd;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .email-header {
+        background-color: #007bff;
+        color: #ffffff;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .email-body {
+        padding: 20px;
+      }
+
+      h2 {
+        margin-top: 0;
+        font-size: 24px;
+        color: #333;
+      }
+
+      p {
+        line-height: 1.6;
+        margin: 10px 0;
+      }
+
+      .strong {
+        font-weight: bold;
+      }
+
+      .email-footer {
+        margin-top: 20px;
+        padding: 10px;
+        text-align: center;
+        background-color: #f4f4f4;
+        color: #777;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <div class="email-header">
+        <h1>Account Suspension</h1>
+      </div>
+      <div class="email-body">
+        <p>Dear <%= fullname %>,</p>
+        <p>
+          Your account has been suspended temporary due to the following reason:
+        </p>
+        <p><strong>Reason:</strong> <%= reason %></p>
+        <p>
+          If you believe this is a mistake, please contact our support team as
+          soon as possible.
+        </p>
+        <p>Thank you,</p>
+        <p>HTU LMS Team</p>
+      </div>
+      <div class="email-footer">&copy; 2024 HTU LMS. All rights reserved.</div>
+    </div>
+  </body>
+</html>
