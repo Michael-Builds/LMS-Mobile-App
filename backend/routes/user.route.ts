@@ -19,6 +19,7 @@ import {
     suspendAccount
 } from '../controllers/user.controller';
 import { isAuthenticated } from '../middleware/auth.middleware';
+import { getNotifications, updateNotifications } from '../controllers/notification.controller';
 
 const userRouter = express.Router();
 
@@ -44,9 +45,12 @@ userRouter.get("/get-users", isAuthenticated, authorizeRoles("admin"), getAllUse
 userRouter.delete("/user/:id", isAuthenticated, authorizeRoles("admin"), deleteUser);
 
 // Admin routes for approving/rejecting account recovery
-userRouter.post("/admin/approve-recovery/:id", isAuthenticated, authorizeRoles("admin"), approveAccountRecovery);
-userRouter.post("/admin/reject-recovery/:id", isAuthenticated, authorizeRoles("admin"), rejectAccountRecovery);
-userRouter.post("/admin/suspend-user/:id", isAuthenticated, authorizeRoles("admin"), suspendAccount);
+userRouter.post("/approve-recovery/:id", isAuthenticated, authorizeRoles("admin"), approveAccountRecovery);
+userRouter.post("/reject-recovery/:id", isAuthenticated, authorizeRoles("admin"), rejectAccountRecovery);
+userRouter.post("/suspend-user/:id", isAuthenticated, authorizeRoles("admin"), suspendAccount);
 
+// Admin routes for for get notifications and updating notifications
+userRouter.get("/get-notifications", isAuthenticated, authorizeRoles("admin"), getNotifications)
+userRouter.put("/update-notifications/:id", isAuthenticated, authorizeRoles("admin"), updateNotifications)
 
 export default userRouter;

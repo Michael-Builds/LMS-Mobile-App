@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Deactivated - HTU LMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
+      rel="stylesheet"
+    />
+    <style type="text/css">
+      body {
+        margin: 0;
+        padding: 0;
+        min-width: 100%;
+        font-family: "Nunito Sans", sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+        background-color: #f4f4f4;
+        color: #222222;
+      }
+
+      a {
+        color: #0070f3;
+        text-decoration: none;
+      }
+
+      h1 {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
+        text-align: center;
+      }
+
+      h2 {
+        font-size: 14px;
+        font-weight: 600;
+        margin-top: 20px;
+        margin-bottom: 10px;
+      }
+
+      p {
+        margin: 0 0 16px;
+      }
+
+      .email-wrapper {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .email-header {
+        background-color: #007bff;
+        padding: 20px;
+        color: #ffffff;
+        text-align: center;
+      }
+
+      .email-body {
+        padding: 20px;
+        font-size: 12px;
+      }
+
+      .email-footer {
+        background-color: #f4f4f4;
+        padding: 20px;
+        text-align: center;
+        font-size: 12px;
+        color: #777;
+      }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="email-header">
+            <h1>Your Account Has Been Deactivated</h1>
+        </div>
+        <div class="email-body">
+            <p>Dear <%= fullname %>,</p>
+            <p>
+                We wanted to inform you that your HTU LMS account has been successfully deactivated as per your request.
+            </p>
+            <p>
+                If this was not done by you or if you wish to reactivate your account, please contact us immediately.
+            </p>
+            <p>
+                We appreciate your time with us, and if you have any further questions or need assistance, please do not hesitate to get in touch.
+            </p>
+        </div>
+        <div class="email-footer">
+            <p>
+                If you have any questions, please do not hesitate to contact us at
+                <a href="mailto:michaelkpantiramp@gmail.com">michaelkpantiramp@gmail.com</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
