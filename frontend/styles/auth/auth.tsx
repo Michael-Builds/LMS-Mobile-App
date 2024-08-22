@@ -161,4 +161,8 @@ export const styles = StyleSheet.create({
     borderRadius: 10,
     fontSize: 20,
   },
+  google: {
+    height: 35,
+    width: 35,
+  },
 })

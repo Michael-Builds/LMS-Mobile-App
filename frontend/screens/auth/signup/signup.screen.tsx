@@ -88,8 +88,7 @@ export default function SignUpScreen() {
   }
 
   const handleSignUp = () => {
-
-  router.push("(routes)/verifyAccount")
+    router.push("/verifyAccount")
   }
 
   return (
@@ -210,7 +209,10 @@ export default function SignUpScreen() {
             }}
           >
             <TouchableOpacity>
-              <FontAwesome name="google" size={24} color="#333" />
+              <Image
+                style={styles.google}
+                source={require("@/assets/auth/google.png")}
+              />
             </TouchableOpacity>
             <TouchableOpacity>
               <FontAwesome name="github" size={24} color="#333" />

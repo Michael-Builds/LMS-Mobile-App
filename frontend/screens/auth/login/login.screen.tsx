@@ -136,14 +136,22 @@ export default function LoginScreen() {
               placeholder="Enter Password"
               onChangeText={handlePasswordValidation}
             />
-            <TouchableOpacity onPress={() => setPasswordVisible(!isPasswordVisible)}  style={styles.visibleIcon}>
+            <TouchableOpacity
+              onPress={() => setPasswordVisible(!isPasswordVisible)}
+              style={styles.visibleIcon}
+            >
               {isPasswordVisible ? (
                 <Ionicons name="eye-off-outline" size={23} color={"#747474"} />
               ) : (
                 <Ionicons name="eye-outline" size={23} color={"#747474"} />
               )}
             </TouchableOpacity>
-            <SimpleLineIcons style={styles.icon2} name="lock" size={19} color={"#A1A1A1"}/>
+            <SimpleLineIcons
+              style={styles.icon2}
+              name="lock"
+              size={19}
+              color={"#A1A1A1"}
+            />
             {error.password && (
               <View style={styles.errorContainer}>
                 <Entypo name="cross" size={18} color={"red"} />
@@ -153,7 +161,12 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity onPress={() => router.push("/forgot-password")}>
-            <Text style={[ styles.forgotSection, { fontFamily: "Nunito_600SemiBold" },]}>
+            <Text
+              style={[
+                styles.forgotSection,
+                { fontFamily: "Nunito_600SemiBold" },
+              ]}
+            >
               Forgot Password
             </Text>
           </TouchableOpacity>
@@ -162,15 +175,30 @@ export default function LoginScreen() {
             {buttonSpinner ? (
               <ActivityIndicator size="small" color={"white"} />
             ) : (
-              <Text style={[ styles.buttonText, { fontFamily: "Nunito_600SemiBold" }, ]}>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { fontFamily: "Nunito_600SemiBold" },
+                ]}
+              >
                 Login
               </Text>
             )}
           </TouchableOpacity>
           <Text style={styles.option}>Or</Text>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12,}} >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 12,
+            }}
+          >
             <TouchableOpacity>
-              <FontAwesome name="google" size={24} color="#333" />
+              <Image
+                style={styles.google}
+                source={require("@/assets/auth/google.png")}
+              />
             </TouchableOpacity>
             <TouchableOpacity>
               <FontAwesome name="github" size={24} color="#333" />
