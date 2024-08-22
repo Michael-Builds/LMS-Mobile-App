@@ -487,6 +487,13 @@ export const updateUserProfile = CatchAsyncErrors(async (req: Request, res: Resp
         // Update user session in Redis
         await redis.set(String(userId), JSON.stringify(user));
 
+        // Create a notification for the user
+        await notificatioModel.create({
+            userId: user._id,
+            title: "New User Update",
+            message: `User Profile Update ${user.fullname}`,
+        });
+
         res.status(200).json({
             success: true,
             user,
@@ -533,6 +540,12 @@ export const updatePassword = CatchAsyncErrors(async (req: Request, res: Respons
         // Convert user ID to a string explicitly and update Redis
         await redis.set(String(req.user?._id), JSON.stringify(user));
 
+        // Create a notification for the user
+        await notificatioModel.create({
+            userId: user._id,
+            title: "New User Update",
+            message: `User Password Update ${user.fullname}`,
+        });
         res.status(200).json({
             success: true,
             message: "Password updated successfully",
@@ -583,6 +596,13 @@ export const deleteUser = CatchAsyncErrors(async (req: Request, res: Response, n
         // Remove user session from Redis
         await redis.del(userId);
 
+        // Create a notification for the user
+        await notificatioModel.create({
+            userId: user._id,
+            title: "New User Update",
+            message: `User Deleted  from database`,
+        });
+
         res.status(200).json({
             success: true,
             message: "User deleted successfully",
@@ -617,9 +637,9 @@ export const deactivateAccount = CatchAsyncErrors(async (req: Request, res: Resp
 
         // Create a notification for account deactivation
         await notificatioModel.create({
-            user: user._id,
+            userId: user._id,
             title: "Account Deactivation Requested",
-            message: "Your account is scheduled for deactivation in 7 days.",
+            message: `Account is scheduled for deactivation in 7 days by ${user.fullname}`,
         });
 
         // Send an email notification to the user
@@ -675,9 +695,9 @@ export const requestAccountRecovery = CatchAsyncErrors(async (req: Request, res:
 
         // Create a notification for account recovery request
         await notificatioModel.create({
-            user: userId,
+            userId: user._id,
             title: "Account Recovery Requested",
-            message: `New account recovery request from ${user.fullname}`,
+            message: `Account recovery by ${user.fullname}`,
         });
 
         // Send email notification to the user
@@ -731,7 +751,7 @@ export const approveAccountRecovery = CatchAsyncErrors(async (req: Request, res:
 
         // Create a notification for account recovery approval
         await notificatioModel.create({
-            user: restoredUser._id,
+            userId: restoredUser._id,
             title: "Account Recovery Approved",
             message: `Your account recovery has been approved for ${deactivatedUser.fullname}`,
         });
@@ -767,7 +787,7 @@ export const rejectAccountRecovery = CatchAsyncErrors(async (req: Request, res: 
 
         // Create a notification for account recovery rejection
         await notificatioModel.create({
-            user: req.user?._id,
+            userId: req.user?._id,
             title: "Account Recovery Rejected",
             message: `Account recovery rejection for ${request.fullname}`,
         });
@@ -828,7 +848,7 @@ export const suspendAccount = CatchAsyncErrors(async (req: Request, res: Respons
 
         // Create a notification for account recovery rejection
         await notificatioModel.create({
-            user: req.user?._id,
+            userId: req.user?._id,
             title: "Account Recovery Rejected",
             message: `Account recovery rejection for ${user.fullname}`,
         });
@@ -861,6 +881,8 @@ export const updateUserRole = CatchAsyncErrors(async (req: Request, res: Respons
     try {
         // Call the service function and wait for the result
         const updatedUser = await updateUserRoleService(userId, newRole);
+
+        
 
         // Send a success response
         res.status(200).json({

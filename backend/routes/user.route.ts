@@ -20,7 +20,7 @@ import {
     updateUserRole
 } from '../controllers/user.controller';
 import { isAuthenticated } from '../middleware/auth.middleware';
-import { getNotifications, updateNotifications } from '../controllers/notification.controller';
+import { getNotifications, getUserNotifications, updateNotifications } from '../controllers/notification.controller';
 
 const userRouter = express.Router();
 
@@ -41,6 +41,9 @@ userRouter.post("/deactivate", isAuthenticated, deactivateAccount);
 // Account Recovery Routes
 userRouter.post("/recover-account", isAuthenticated, requestAccountRecovery);
 
+// Route to get notifications for the logged-in user
+userRouter.get("/user-notifications", isAuthenticated, getUserNotifications);
+
 // Admin Routes
 userRouter.get("/get-users", isAuthenticated, authorizeRoles("admin"), getAllUsers);
 userRouter.delete("/delete-user/:id", isAuthenticated, authorizeRoles("admin"), deleteUser);
@@ -50,7 +53,7 @@ userRouter.post("/approve-recovery/:id", isAuthenticated, authorizeRoles("admin"
 userRouter.post("/reject-recovery/:id", isAuthenticated, authorizeRoles("admin"), rejectAccountRecovery);
 userRouter.post("/suspend-user/:id", isAuthenticated, authorizeRoles("admin"), suspendAccount);
 
-// Admin routes for for get notifications and updating notifications
+// Admin routes to get notifications and updating notifications
 userRouter.get("/get-notifications", isAuthenticated, authorizeRoles("admin"), getNotifications)
 userRouter.put("/update-notifications/:id", isAuthenticated, authorizeRoles("admin"), updateNotifications)
 

@@ -151,7 +151,7 @@ export const checkoutCart = CatchAsyncErrors(async (req: Request, res: Response,
 
             // Create a notification for the user
             await notificatioModel.create({
-                user: user._id,
+                userId: user._id,
                 title: "New Order",
                 message: `You have a new order for ${courseDoc.name}`,
             });

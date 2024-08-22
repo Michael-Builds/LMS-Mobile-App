@@ -8,6 +8,10 @@ export interface INotification extends Document {
 }
 
 const notificationSchema = new Schema<INotification>({
+    userId: {
+        type: String,
+        required: true,
+    },
     title: {
         type: String,
         required: true,
@@ -20,7 +24,7 @@ const notificationSchema = new Schema<INotification>({
         type: String,
         required: true,
         default: "unread"
-    }
+    },
 }, { timestamps: true })
 
 const notificatioModel: Model<INotification> = mongoose.model("Notification", notificationSchema);

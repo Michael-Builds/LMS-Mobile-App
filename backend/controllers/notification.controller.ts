@@ -46,3 +46,25 @@ export const updateNotifications = CatchAsyncErrors(async (req: Request, res: Re
         return next(new ErrorHandler(error.message, 400));
     }
 });
+
+// Fetches user notifications
+export const getUserNotifications = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user?._id;
+      
+        console.log(`Logged in as ${userId}`);
+  
+        // Fetch notifications for the logged-in user
+        const notifications = await notificatioModel.find({ userId: userId }).sort({ createdAt: -1 });
+  
+        console.log(`Found ${notifications.length} notifications for user ${userId}`);
+  
+        res.status(200).json({
+            success: true,
+            message: "User notifications retrieved successfully",
+            notifications,
+        });
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 400));
+    }
+});

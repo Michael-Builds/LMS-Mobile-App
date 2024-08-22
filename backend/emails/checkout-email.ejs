@@ -30,10 +30,13 @@
         background-color: #007bff;
         color: #ffffff;
         text-align: center;
-        padding: 20px;
-        font-size: 16px;
+        padding: 5px;
         font-weight: 700;
         border-radius: 8px 8px 0 0;
+      }
+
+      .header h1 {
+        font-size: 16px;
       }
       .header p {
         font-size: 14px;
@@ -63,6 +66,7 @@
         background-color: #f4f4f4;
         font-weight: 600;
         text-align: center;
+        white-space: nowrap;
       }
       .order-details td {
         text-align: center;
@@ -113,7 +117,7 @@
           <tbody>
             <% order.courses.forEach(function(course) { %>
             <tr>
-                <td><%= course.orderNumber %></td>
+              <td><%= course.orderNumber %></td>
               <td><%= course.name %></td>
               <td>$<%= course.price.toFixed(2) %></td>
               <td><%= course.quantity %></td>
