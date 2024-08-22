@@ -94,7 +94,6 @@ cron.schedule('0 0 * * *', async () => {
     }
 });
 
-
 // Cron job to delete carts that haven't been updated in 2 months
 cron.schedule('0 0 * * *', async () => {
     try {
@@ -110,7 +109,6 @@ cron.schedule('0 0 * * *', async () => {
         console.error('Error deleting old carts:', error);
     }
 });
-
 
 // Cron job to unlock user accounts after 24 hours
 cron.schedule('0 * * * *', async () => {
@@ -130,7 +128,6 @@ cron.schedule('0 * * * *', async () => {
         console.error('Error unlocking user accounts:', error);
     }
 });
-
 
 // Cron job to suspend user accounts after repeated failed login attempts
 cron.schedule('0 * * * *', async () => {
@@ -190,6 +187,3 @@ cron.schedule('0 * * * *', async () => {
     }
 });
 
-cron.schedule('*/2 * * * * *', () => {
-    console.log('------ Running cron ------');
-});
