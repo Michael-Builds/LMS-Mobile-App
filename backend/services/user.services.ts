@@ -70,7 +70,7 @@ export const updateUserRoleService = async (userId: string, newRole: string) => 
 
     // Create a notification for the user
     await notificatioModel.create({
-        user: user._id,
+        userId: user._id,
         title: "Role Updated",
         message: `Your role has been updated to ${newRole}.`,
     });

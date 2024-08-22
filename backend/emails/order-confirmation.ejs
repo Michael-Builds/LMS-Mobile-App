@@ -27,17 +27,20 @@
             background-color: #007bff;
             color: #ffffff;
             text-align: center;
-            padding: 20px;
-            font-size: 16px;
+            padding: 5px;
+            /* font-size: 14px; */
             font-weight: 700;
             border-radius: 8px 8px 0 0;
         }
+        .header h1{
+            font-size: 16px;
+        }
         .header p {
-            font-size: 13px;
+            font-size: 12px;
             margin-top: 10px;
         }
         .content {
-            padding: 20px;
+            padding: 10px;
         }
         .content h4 {
             font-size: 18px;
@@ -55,11 +58,13 @@
             padding: 10px;
             text-align: left;
             border-bottom: 1px solid #eaeaea;
+            font-size: 12px;
         }
         .order-details th {
             background-color: #f4f4f4;
             font-weight: 600;
             text-align: center;
+            white-space: nowrap;
         }
         .order-details td {
             text-align: center;
@@ -72,15 +77,15 @@
             font-weight: 700;
             text-align: right;
             padding-top: 20px;
-            border-bottom: 1px solid #eaeaea;
-            margin-top: 20px;
+            /* border-bottom: 1px solid #eaeaea; */
+            margin: 10px;
         }
         .footer {
             background-color: #f4f4f4;
             color: #6b6e76;
             text-align: center;
             padding: 20px;
-            font-size: 14px;
+            font-size: 12px;
         }
         .footer a {
             color: #007bff;
@@ -103,7 +108,6 @@
                     <th>Item</th>
                     <th>Date</th>
                     <th>Cost</th>
-                    <th>Qty</th>
                     <th>Subtotal</th>
                 </tr>
                 <tr>
@@ -111,7 +115,6 @@
                     <td><%= order.name %></td>
                     <td><%= order.date %></td>
                     <td>$<%= order.price %></td>
-                    <td>1</td>
                     <td>$<%= order.price %></td>
                 </tr>
             </table>

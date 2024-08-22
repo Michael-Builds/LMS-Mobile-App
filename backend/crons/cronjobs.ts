@@ -5,7 +5,6 @@ import userModel from "../model/user.model";
 import deactivatedModel from "../model/deactivate.model";
 import cartModel from "../model/cart.model";
 
-
 // Cron job to delete notifications older than 30 days
 cron.schedule("0 0 * * *", async () => {
     try {
@@ -16,7 +15,6 @@ cron.schedule("0 0 * * *", async () => {
         console.error("Error deleting notifications:", error);
     }
 });
-
 
 // Cron job to deactivate user accounts
 // Runs every 30 minutes to check if any users' deactivation dates have passed
@@ -171,7 +169,7 @@ cron.schedule('0 * * * *', async () => {
                 await notificatioModel.create({
                     user: user._id,
                     title: "Account Suspended",
-                    message: "Your account has been suspended due to multiple failed login attempts."
+                    message: `Account for ${user.fullname} has been suspended due to multiple failed login attempts.`
                 });
 
                 // Send email notification to the user

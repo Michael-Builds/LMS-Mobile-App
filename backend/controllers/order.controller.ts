@@ -69,11 +69,12 @@ export const createOrder = CatchAsyncErrors(async (req: Request, res: Response, 
 
         // Create a notification for the user
         await notificatioModel.create({
-            user: user._id,
+            userId: user._id,
             title: "New Order",
             message: `You have a new order for ${course.name}`,
         });
 
+        console.log(`Order confirmation for ${user._id} on ${course.name}`)
         course.purchased = (course.purchased || 0) + 1;
 
         await course.save();
