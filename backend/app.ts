@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { ORIGIN } from "./config";
+import { ORIGIN, PORT, SWAGGER_PORT } from "./config";
 import { ErrorMiddleware } from './middleware/error';
 import userRouter from './routes/user.route';
 import courseRouter from "./routes/course.route";
@@ -35,8 +35,8 @@ app.use("/order/api", orderRouter);
 app.use("/cart/api", cartRouter);
 
 
-app.listen(3000, () => {
-    console.log(colors.bgGreen.white(`Swagger docs are available at http://localhost:4000/api-docs`));
+app.listen(SWAGGER_PORT, () => {
+    console.log(colors.bgYellow.white(`Swagger working on Port ${SWAGGER_PORT}`));
 });
   
 app.all("*", (req, res, next) => {
