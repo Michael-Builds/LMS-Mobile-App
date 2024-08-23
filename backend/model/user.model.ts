@@ -111,7 +111,6 @@ userSchema.methods.signAccessToken = function () {
             expiresIn: ACCESS_TOKEN_EXPIRY,
         });
     } catch (error: any) {
-        console.error("Error signing access token", error);
         throw new Error("Could not generate access token");
     }
 };

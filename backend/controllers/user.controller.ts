@@ -330,7 +330,7 @@ export const updateAccessToken = CatchAsyncErrors(async (req: Request, res: Resp
 // get user infor handler
 export const getUserInfo = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let userId: string | undefined;
+        let userId: string ;
 
         // Check for access token in cookies
         const accessToken = req.cookies.access_token;
@@ -345,7 +345,7 @@ export const getUserInfo = CatchAsyncErrors(async (req: Request, res: Response, 
 
                 if (error.name === 'TokenExpiredError') {
                     // Attempt to refresh the token
-                    await updateAccessToken(req, res, next);
+                     updateAccessToken(req, res, next);
                     // Check if the token refresh was successful
                     if (req.user) {
                         userId = String(req.user._id);

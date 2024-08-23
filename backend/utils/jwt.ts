@@ -12,16 +12,30 @@ interface ITokenOptions {
 }
 
 // Parse the environment variables and provide default values
-const accessTokenExpiry = parseInt(ACCESS_TOKEN_EXPIRY || '3600', 10);
-const refreshTokenExpiry = parseInt(REFRESH_TOKEN_EXPIRY || '86400', 10);
+const accessTokenExpiry = ACCESS_TOKEN_EXPIRY || '5m';
+const refreshTokenExpiry = REFRESH_TOKEN_EXPIRY || '7d'; 
+
+
+// Helper function to convert time string to milliseconds
+const timeToMs = (timeString: string): number => {
+    const unit = timeString.slice(-1);
+    const value = parseInt(timeString.slice(0, -1));
+    switch (unit) {
+        case 's': return value * 1000;
+        case 'm': return value * 60 * 1000;
+        case 'h': return value * 60 * 60 * 1000;
+        case 'd': return value * 24 * 60 * 60 * 1000;
+        default: return 0;
+    }
+};
 
 // Set options for the access token cookie
 export const accessTokenOptions: ITokenOptions = {
     httpOnly: true,
     sameSite: "lax",
     secure: NODE_ENV === 'production' ? true : undefined,
-    maxAge: accessTokenExpiry * 60 * 60 * 1000,
-    expires: new Date(Date.now() + accessTokenExpiry * 60 * 60 * 1000),
+    maxAge: timeToMs(accessTokenExpiry),
+    expires: new Date(Date.now() + timeToMs(accessTokenExpiry)),
 };
 
 // Set options for the refresh token cookie
@@ -29,8 +43,8 @@ export const refreshTokenOptions: ITokenOptions = {
     httpOnly: true,
     sameSite: "lax",
     secure: NODE_ENV === 'production' ? true : undefined,
-    maxAge: refreshTokenExpiry * 24 * 60 * 60 * 1000,
-    expires: new Date(Date.now() + refreshTokenExpiry * 24 * 60 * 60 * 1000),
+    maxAge: timeToMs(refreshTokenExpiry),
+    expires: new Date(Date.now() + timeToMs(refreshTokenExpiry)),
 };
 
 export const sendToken = (user: IUser, statusCode: number, res: Response) => {

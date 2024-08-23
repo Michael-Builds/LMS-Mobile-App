@@ -29,6 +29,7 @@ export const isAuthenticated = CatchAsyncErrors(async (req: Request, res: Respon
         req.user = JSON.parse(user);
         next();
     } catch (error: any) {
+        console.error('An error occurred', error.message)
         return next(new ErrorHandler("Invalid or expired token", 401));
     }
 });
