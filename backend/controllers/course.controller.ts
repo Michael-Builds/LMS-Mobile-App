@@ -8,12 +8,15 @@ import { createCourse } from "../services/course.services";
 import mongoose from "mongoose";
 import sendEmail from "../utils/sendEmail";
 import notificatioModel from "../model/notification.model";
+import userModel from "../model/user.model";
 
 // Controller to handle course upload
 export const uploadCourse = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     try {
         // Destructure required data from the request body
         const { thumbnail, ...courseData } = req.body;
+
+        const user = await userModel.findById(req.user?._id);
 
         // If a thumbnail is provided, upload it to Cloudinary
         if (thumbnail) {
@@ -32,7 +35,15 @@ export const uploadCourse = CatchAsyncErrors(async (req: Request, res: Response,
         }
 
         // Create the course using the service function
-        const course = await createCourse(courseData);
+       const course = await createCourse({ ...courseData });
+
+       
+        // Create a notification for the user
+        await notificatioModel.create({
+            userId: user?._id,
+            title: "New Order",
+            message: `You have a new course ${course.name}`,
+        });
 
         // Send response back to the client
         res.status(201).json({
@@ -42,6 +53,7 @@ export const uploadCourse = CatchAsyncErrors(async (req: Request, res: Response,
         });
     } catch (err: any) {
         // Handle any errors that occur during the process
+        console.error(err);
         return next(new ErrorHandler(err.message, 500));
     }
 });

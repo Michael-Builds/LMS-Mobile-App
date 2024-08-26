@@ -39,6 +39,7 @@ interface ICourse extends Document {
     courseData: ICourseData[];
     ratings?: number;
     purchased?: number;
+    category: string;
 }
 
 const reviewSchema = new Schema<IReview>({
@@ -73,6 +74,7 @@ interface ICourseData extends Document {
     links: ILink[];
     suggestion: string;
     questions: IComment[];
+    category: string;
 }
 
 const courseDataSchema = new Schema<ICourseData>({
@@ -137,6 +139,10 @@ const courseSchema = new Schema<ICourse>({
     purchased: {
         type: Number,
         default: 0
+    },
+    category: {
+        type: String,
+        required: true
     }
 })
 
