@@ -74,7 +74,6 @@ interface ICourseData extends Document {
     links: ILink[];
     suggestion: string;
     questions: IComment[];
-    category: string;
 }
 
 const courseDataSchema = new Schema<ICourseData>({
