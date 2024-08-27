@@ -330,7 +330,7 @@ export const updateAccessToken = CatchAsyncErrors(async (req: Request, res: Resp
 // get user infor handler
 export const getUserInfo = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let userId: string ;
+        let userId: string;
 
         // Check for access token in cookies
         const accessToken = req.cookies.access_token;
@@ -345,7 +345,7 @@ export const getUserInfo = CatchAsyncErrors(async (req: Request, res: Response, 
 
                 if (error.name === 'TokenExpiredError') {
                     // Attempt to refresh the token
-                     updateAccessToken(req, res, next);
+                    updateAccessToken(req, res, next);
                     // Check if the token refresh was successful
                     if (req.user) {
                         userId = String(req.user._id);
@@ -882,7 +882,12 @@ export const updateUserRole = CatchAsyncErrors(async (req: Request, res: Respons
         // Call the service function and wait for the result
         const updatedUser = await updateUserRoleService(userId, newRole);
 
-        
+        // Create a notification for account recovery rejection
+        await notificatioModel.create({
+            userId: req.user?._id,
+            title: "Updated user role",
+            message: `Role Update Success`,
+        });
 
         // Send a success response
         res.status(200).json({

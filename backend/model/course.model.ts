@@ -24,7 +24,7 @@ interface ILink extends Document {
     url: string;
 }
 
-interface ICourse extends Document {
+export interface ICourse extends Document {
     name: string;
     description: string;
     price: number;
@@ -143,7 +143,7 @@ const courseSchema = new Schema<ICourse>({
         type: String,
         required: true
     }
-})
+}, { timestamps: true })
 
 const courseModel: Model<ICourse> = mongoose.model("Course", courseSchema)
 export default courseModel

@@ -19,6 +19,8 @@ tags:
     description: Endpoints related to managing courses
   - name: Cart
     description: Endpoints related to cart management
+  - name: Analytics
+    description: Endpoints related to generating analytics reports
 
 paths:
   ### User Routes ###
@@ -424,6 +426,55 @@ paths:
           description: User role updated successfully
         "404":
           description: User not found
+        "500":
+          description: Internal server error
+
+  ### Analytics Routes ###
+  /analytics/api/get-user-analytics:
+    get:
+      summary: Get user analytics for the last 12 months
+      tags: [Analytics, Admin]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User analytics generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsResponse"
+        "500":
+          description: Internal server error
+
+  /analytics/api/get-course-analytics:
+    get:
+      summary: Get course analytics for the last 12 months
+      tags: [Analytics, Admin]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Course analytics generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsResponse"
+        "500":
+          description: Internal server error
+
+  /analytics/api/get-order-analytics:
+    get:
+      summary: Get order analytics for the last 12 months
+      tags: [Analytics, Admin]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Order analytics generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderAnalyticsResponse"
         "500":
           description: Internal server error
 
@@ -1251,7 +1302,75 @@ components:
               quantity:
                 type: integer
                 description: The quantity of the product
+    UserAnalyticsResponse:
+      type: object
+      properties:
+        last12Months:
+          type: array
+          description: Analytics data for the last 12 months
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+                description: Month and year in "MMM YYYY" format
+              count:
+                type: integer
+                description: Number of documents for the given month
+              totalPurchases:
+                type: number
+                description: Total purchases for the given month (optional)
+              totalRevenue:
+                type: number
+                description: Total revenue for the given month (optional)
+              totalSum:
+                type: number
+                description: Any additional sum calculated (optional)
 
+    CourseAnalyticsResponse:
+      type: object
+      properties:
+        last12Months:
+          type: array
+          description: Analytics data for the last 12 months
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+                description: Month and year in "MMM YYYY" format
+              count:
+                type: integer
+                description: Number of courses for the given month
+              totalPurchases:
+                type: number
+                description: Total purchases for the given month (optional)
+              totalRevenue:
+                type: number
+                description: Total revenue for the given month (optional)
+              totalSum:
+                type: number
+                description: Any additional sum calculated (optional)
+
+    OrderAnalyticsResponse:
+      type: object
+      properties:
+        last12Months:
+          type: array
+          description: Analytics data for the last 12 months
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+                description: Month and year in "MMM YYYY" format
+              count:
+                type: integer
+                description: Number of orders for the given month
+              totalAmount:
+                type: number
+                description: Total order amount for the given month
+                
   securitySchemes:
     bearerAuth:
       type: http

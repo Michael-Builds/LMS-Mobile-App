@@ -57,6 +57,7 @@ export const accountSuspension = async (user: IUser) => {
 export const updateUserRoleService = async (userId: string, newRole: string) => {
     // Validate new role (if applicable)
     const validRoles = ['admin', 'student', 'tutor'];
+    
     if (!validRoles.includes(newRole)) {
         throw new ErrorHandler(`Invalid role: ${newRole}`, 400);
     }

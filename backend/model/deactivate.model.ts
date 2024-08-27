@@ -38,7 +38,7 @@ const deactivatedUserSchema: Schema<IDeactivatedUser> = new Schema({
         type: Boolean,
         required: false,
     },
-});
+},{ timestamps: true });
 
 const deactivatedModel = mongoose.model<IDeactivatedUser>("DeactivatedUser", deactivatedUserSchema);
 export default deactivatedModel;

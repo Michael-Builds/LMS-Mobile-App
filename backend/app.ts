@@ -7,6 +7,7 @@ import userRouter from './routes/user.route';
 import courseRouter from "./routes/course.route";
 import orderRouter from './routes/order.route';
 import cartRouter from './routes/cart.route';
+import analyticsRouter from './routes/analtyics.route';
 import "./crons/cronjobs"
 import { setupSwagger } from './swagger';
 import colors from 'colors';
@@ -33,6 +34,9 @@ app.use("/courses/api", courseRouter);
 app.use("/order/api", orderRouter);
 
 app.use("/cart/api", cartRouter);
+
+app.use("/analytics/api", analyticsRouter);
+
 
 
 app.listen(SWAGGER_PORT, () => {

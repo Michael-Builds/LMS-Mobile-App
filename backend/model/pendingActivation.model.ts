@@ -34,7 +34,7 @@ const pendingActivationSchema: Schema<IPendingActivation> = new Schema({
         type: Date,
         default: Date.now,
     },
-});
+},{ timestamps: true });
 
 const pendingActivationModel = mongoose.model<IPendingActivation>("PendingActivation", pendingActivationSchema);
 export default pendingActivationModel;
