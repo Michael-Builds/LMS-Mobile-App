@@ -4,6 +4,7 @@ import { CatchAsyncErrors } from "./catchAsyncError";
 import ErrorHandler from "../utils/ErrorHandler";
 import { ACCESS_TOKEN } from "../config";
 import { redis } from "../utils/redis";
+import { IUser } from "../model/user.model";
 
 export const isAuthenticated = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     const access_token = req.cookies.access_token;
@@ -22,9 +23,8 @@ export const isAuthenticated = CatchAsyncErrors(async (req: Request, res: Respon
         // Retrieve user from Redis using the ID from the token
         const user = await redis.get(decoded.id);
         if (!user) {
-            return next(new ErrorHandler("User not found", 401));
+            return next(new ErrorHandler("Please login to access this resource", 400));
         }
-
         // Attach the user to the request object
         req.user = JSON.parse(user);
         next();
@@ -33,3 +33,25 @@ export const isAuthenticated = CatchAsyncErrors(async (req: Request, res: Respon
         return next(new ErrorHandler("Invalid or expired token", 401));
     }
 });
+
+
+// Controller to authorize roles for specific routes
+export const authorizeRoles = (...roles: string[]) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        try {
+            // Ensure req.user is populated (typically done by authentication middleware)
+            const user = req.user as IUser;
+
+            // Check if the user's role is included in the allowed roles
+            if (!roles.includes(user.role || "")) {
+                // If the role is not authorized, return a 403 Forbidden error
+                return next(new ErrorHandler(`Access denied: Role ${user.role} is not authorized to access this resource`, 403));
+            }
+            // If the role is authorized, proceed to the next middleware or route handler
+            next();
+        } catch (err: any) {
+            // Handle any unexpected errors and pass them to the global error handler
+            return next(new ErrorHandler("Authorization failed", 500));
+        }
+    };
+};

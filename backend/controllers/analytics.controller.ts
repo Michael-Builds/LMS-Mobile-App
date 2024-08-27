@@ -5,11 +5,29 @@ import { generateLast12MonthsData } from "../utils/analytics.generator";
 import userModel, { IUser } from "../model/user.model";
 import courseModel, { ICourse } from "../model/course.model";
 import orderModel, { IOrder } from "../model/order.model";
+import { getCache, setCache } from "../utils/catche.management";
 
 // Get users analytics controller for admin
 export const getUserAnalytics = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     try {
+
+        const cacheKey = "user_analytics";
+        
+        // Try to retrieve data from cache
+        const cachedAnalytics = await getCache(cacheKey);
+
+        if (cachedAnalytics) {
+            return res.status(200).json({
+                success: true,
+                users: cachedAnalytics,
+                message: "User analytics retrieved from cache successfully",
+            });
+        }
+
         const users = await generateLast12MonthsData<IUser>({ model: userModel });
+
+        await setCache(cacheKey, users, 86400);
+
         res.status(200).json({
             success: true,
             users,

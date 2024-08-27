@@ -9,6 +9,7 @@ import mongoose from "mongoose";
 import sendEmail from "../utils/sendEmail";
 import notificatioModel from "../model/notification.model";
 import userModel from "../model/user.model";
+import { delCache, setCache } from "../utils/catche.management";
 
 // Controller to handle course upload
 export const uploadCourse = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -102,9 +103,9 @@ export const editCourse = CatchAsyncErrors(async (req: Request, res: Response, n
         }
 
         // Invalidate the cached data for this course and all courses
-        await redis.del(courseId);
-        await redis.del("allCourses");
-
+        await delCache(courseId);
+        await delCache("allCourses");
+        
         // Send success response
         res.status(200).json({
             success: true,
@@ -142,7 +143,7 @@ export const getSingleCourse = CatchAsyncErrors(async (req: Request, res: Respon
             }
 
             // Cache the course data in Redis
-            await redis.set(courseId, JSON.stringify(course));
+            await setCache(courseId, course, 604800);
 
             // Send a success response with the course data
             res.status(200).json({
@@ -179,8 +180,8 @@ export const getAllCourses = CatchAsyncErrors(async (req: Request, res: Response
             }
 
             // Cache the courses data in Redis
-            await redis.set("allCourses", JSON.stringify(courses));
-
+            await redis.set("allCourses", JSON.stringify(courses),"EX", 604800);
+          
             // Send the response with the list of courses
             res.status(200).json({
                 success: true,
@@ -215,7 +216,7 @@ export const deleteCourse = CatchAsyncErrors(async (req: Request, res: Response,
         await courseModel.findByIdAndDelete(courseId);
 
         // Remove the course from Redis cache
-        await redis.del(courseId);
+        await delCache(courseId);
 
         // Send a success response
         res.status(200).json({

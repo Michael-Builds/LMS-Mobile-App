@@ -1,7 +1,6 @@
 import express from 'express';
 import { addQuestion, addQuestionReply, addReview, addReviewReply, deleteCourse, editCourse, getAllCourses, getCourseByUser, getSingleCourse, uploadCourse } from '../controllers/course.controller';
-import { isAuthenticated } from '../middleware/auth.middleware';
-import { authorizeRoles } from '../controllers/user.controller';
+import { authorizeRoles, isAuthenticated } from '../middleware/auth.middleware';
 
 const courseRouter = express.Router();
 

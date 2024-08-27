@@ -111,7 +111,6 @@ export const getAllOrders = CatchAsyncErrors(async (req: Request, res: Response,
     }
 });
 
-
 // Get All Orders for the Authenticated User
 export const getUserOrders = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     try {

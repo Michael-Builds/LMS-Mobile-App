@@ -13,6 +13,7 @@ import cloudinary from "cloudinary"
 import deactivatedModel from '../model/deactivate.model';
 import pendingActivationModel from '../model/pendingActivation.model';
 import notificatioModel from '../model/notification.model';
+import { delCache, getCache, setCache } from '../utils/catche.management';
 
 // Account registration handler
 export const accountRegister = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -220,6 +221,9 @@ export const userLogin = CatchAsyncErrors(async (req: Request, res: Response, ne
         user.failedLoginTimestamps = [];
         await user.save();
 
+        // Save user session in Redis with a 1-hour expiration
+        await setCache(user?.id, user, 3600)
+       
         // If the credentials are correct, generate tokens and send them in the response
         sendToken(user, 200, res);
     } catch (err: any) {
@@ -243,11 +247,8 @@ export const userLogout = CatchAsyncErrors(async (req: Request, res: Response, n
         if (user) {
             // Convert the user's ObjectId to a string format
             const userId = String(user._id);
-            // Remove the user's session data from Redis using their user ID as the key
-            await redis.del(userId);
-            console.log(`User ${userId} logged out and removed from Redis.`);
+            await delCache(userId);
         } else {
-            // Log a warning if no user information is found in the request
             console.warn("No user found in request, skipping Redis deletion.");
         }
         // Send a success response to the client indicating the user has been logged out
@@ -260,27 +261,6 @@ export const userLogout = CatchAsyncErrors(async (req: Request, res: Response, n
         return next(new ErrorHandler(err.message, 400));
     }
 });
-
-// Controller to authorize roles for specific routes
-export const authorizeRoles = (...roles: string[]) => {
-    return (req: Request, res: Response, next: NextFunction) => {
-        try {
-            // Ensure req.user is populated (typically done by authentication middleware)
-            const user = req.user as IUser;
-
-            // Check if the user's role is included in the allowed roles
-            if (!roles.includes(user.role || "")) {
-                // If the role is not authorized, return a 403 Forbidden error
-                return next(new ErrorHandler(`Access denied: Role ${user.role} is not authorized to access this resource`, 403));
-            }
-            // If the role is authorized, proceed to the next middleware or route handler
-            next();
-        } catch (err: any) {
-            // Handle any unexpected errors and pass them to the global error handler
-            return next(new ErrorHandler("Authorization failed", 500));
-        }
-    };
-};
 
 // Update access token handler
 export const updateAccessToken = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -297,7 +277,7 @@ export const updateAccessToken = CatchAsyncErrors(async (req: Request, res: Resp
         const session = await redis.get(decoded.id);
 
         if (!session) {
-            return next(new ErrorHandler("User session not found", 400));
+            return next(new ErrorHandler("Please login to access this resource", 400));
         }
 
         const user = JSON.parse(session);
@@ -317,6 +297,8 @@ export const updateAccessToken = CatchAsyncErrors(async (req: Request, res: Resp
         }
         res.cookie("access_token", accessToken, accessTokenOptions);
         res.cookie("refresh_token", refreshToken, refreshTokenOptions);
+
+        await setCache(user?.id, user, 604800);
 
         res.status(200).json({
             success: true,
@@ -341,15 +323,12 @@ export const getUserInfo = CatchAsyncErrors(async (req: Request, res: Response, 
                 const decoded = jwt.verify(accessToken, ACCESS_TOKEN as string) as JwtPayload;
                 userId = decoded.id;
             } catch (error: any) {
-                console.error("Error verifying access token:", error.message);
-
                 if (error.name === 'TokenExpiredError') {
                     // Attempt to refresh the token
                     updateAccessToken(req, res, next);
                     // Check if the token refresh was successful
                     if (req.user) {
                         userId = String(req.user._id);
-                        console.log("Token refreshed, new user ID:", userId);
                     } else {
                         return next(new ErrorHandler("Session expired. Please log in again.", 401));
                     }
@@ -358,34 +337,28 @@ export const getUserInfo = CatchAsyncErrors(async (req: Request, res: Response, 
                 }
             }
         } else {
-            console.log("No access token found in cookies");
             return next(new ErrorHandler("No access token found. Please log in.", 401));
         }
 
         if (!userId) {
-            console.log("No user ID found after all attempts");
             return next(new ErrorHandler("User not authenticated", 401));
         }
 
-        console.log("Final user ID:", userId);
-
         // Retrieve user details from Redis or database
-        const userSession = await redis.get(userId);
+        const userSession =  await getCache(userId);
+
         console.log("User session from Redis:", userSession);
 
         if (userSession) {
             const userDetails = JSON.parse(userSession);
-            console.log("User details from Redis:", userDetails);
             res.status(200).json({
                 success: true,
                 user: userDetails
             });
         } else {
-            console.log("User session not found in Redis, fetching from database");
             await getUserById(userId, res);
         }
     } catch (err: any) {
-        console.error("Error in getUserInfo:", err);
         return next(new ErrorHandler(err.message, 400));
     }
 });
@@ -485,7 +458,7 @@ export const updateUserProfile = CatchAsyncErrors(async (req: Request, res: Resp
         await user.save();
 
         // Update user session in Redis
-        await redis.set(String(userId), JSON.stringify(user));
+        await setCache(String(userId), user, 86400);
 
         // Create a notification for the user
         await notificatioModel.create({
@@ -538,8 +511,8 @@ export const updatePassword = CatchAsyncErrors(async (req: Request, res: Respons
         await user.save();
 
         // Convert user ID to a string explicitly and update Redis
-        await redis.set(String(req.user?._id), JSON.stringify(user));
-
+        await setCache(String(req.user?._id), user, 86400);
+        
         // Create a notification for the user
         await notificatioModel.create({
             userId: user._id,
@@ -594,7 +567,7 @@ export const deleteUser = CatchAsyncErrors(async (req: Request, res: Response, n
         await userModel.findByIdAndDelete(userId);
 
         // Remove user session from Redis
-        await redis.del(userId);
+        await delCache(userId);
 
         // Create a notification for the user
         await notificatioModel.create({
@@ -843,7 +816,7 @@ export const suspendAccount = CatchAsyncErrors(async (req: Request, res: Respons
         await userModel.findByIdAndDelete(id);
 
         // Remove user session from Redis
-        await redis.del(id);
+        await delCache(id);
 
 
         // Create a notification for account recovery rejection
@@ -872,7 +845,6 @@ export const suspendAccount = CatchAsyncErrors(async (req: Request, res: Respons
         return next(new ErrorHandler(err.message, 500));
     }
 });
-
 
 // Controller for updating user role
 export const updateUserRole = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {

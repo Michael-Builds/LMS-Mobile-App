@@ -1,7 +1,6 @@
 import express from 'express';
-import { isAuthenticated } from '../middleware/auth.middleware';
+import { authorizeRoles, isAuthenticated } from '../middleware/auth.middleware';
 import { createOrder, deleteUserOrder, getAllOrders, getUserOrders } from '../controllers/order.controller';
-import { authorizeRoles } from '../controllers/user.controller';
 
 const orderRouter = express.Router();
 

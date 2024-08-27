@@ -4,6 +4,8 @@ import ErrorHandler from "../utils/ErrorHandler";
 import cloudinary from "cloudinary"
 import layoutModel from "../model/layout.model";
 import { createBanner, createCategories, createFAQ } from "../services/layout.services";
+import { redis } from "../utils/redis";
+import { setCache } from "../utils/catche.management";
 
 // Create Layout
 export const createLayout = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -118,6 +120,9 @@ export const getLayoutByType = CatchAsyncErrors(async (req: Request, res: Respon
         if (!layout) {
             return next(new ErrorHandler(`No layout found for type: ${type}`, 404));
         }
+
+        // Cache the layout configuration with an expiration
+        await setCache(`layout_${type}`, layout, 86400); 
 
         res.status(200).json({
             success: true,

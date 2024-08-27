@@ -9,6 +9,7 @@ import userModel from "../model/user.model";
 import notificatioModel from "../model/notification.model";
 import courseModel from "../model/course.model";
 import { addCourseToCart, removeCourseFromCart } from "../services/cart.services";
+import { delCache, getCache, setCache } from "../utils/catche.management";
 
 // Add a course to the cart
 export const addToCart = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -77,11 +78,27 @@ export const removeFromCart = CatchAsyncErrors(async (req: Request, res: Respons
 // Get user's cart
 export const getCart = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?._id;
+
+    const cacheKey = `cart_${userId}`;
+
+     // Try to retrieve the cart from cache
+     const cachedCart = await getCache(cacheKey);
+     if (cachedCart) {
+         return res.status(200).json({
+             success: true,
+             cart: cachedCart,
+             message: "Cart retrieved from cache successfully",
+         });
+    }
+    
     const cart = await cartModel.findOne({ userId }).populate("courses.courseId");
 
     if (!cart) {
         return next(new ErrorHandler("Cart not found", 404));
     }
+
+    // Cache the cart data with an expiration time
+    await setCache(cacheKey, cart, 3600);
 
     res.status(200).json({
         success: true,
@@ -192,12 +209,17 @@ export const checkoutCart = CatchAsyncErrors(async (req: Request, res: Response,
         // Clear the cart after checkout
         await cartModel.findByIdAndDelete(cart._id);
 
+        // Cache the checkout order data temporarily
+        // await redis.set(`checkout_order_${userId}`, JSON.stringify(cart), "EX", 600);
+        await delCache(`cart_${userId}`);
+        await delCache(`checkout_order_${userId}`);
+
         res.status(201).json({
             success: true,
             message: "Order placed successfully",
         });
+
     } catch (error) {
-        console.error("Error during checkout process:", error);
         return next(new ErrorHandler("Checkout process failed", 500));
     }
 });

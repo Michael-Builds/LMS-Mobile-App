@@ -2,7 +2,6 @@ import express from 'express';
 import {
     accountRegister,
     activateAccount,
-    authorizeRoles,
     deactivateAccount,
     deleteUser,
     getAllUsers,
@@ -19,7 +18,7 @@ import {
     suspendAccount,
     updateUserRole
 } from '../controllers/user.controller';
-import { isAuthenticated } from '../middleware/auth.middleware';
+import { authorizeRoles, isAuthenticated } from '../middleware/auth.middleware';
 import { getNotifications, getUserNotifications, updateNotifications } from '../controllers/notification.controller';
 
 const userRouter = express.Router();
