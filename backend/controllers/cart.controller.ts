@@ -210,9 +210,7 @@ export const checkoutCart = CatchAsyncErrors(async (req: Request, res: Response,
         await cartModel.findByIdAndDelete(cart._id);
 
         // Cache the checkout order data temporarily
-        // await redis.set(`checkout_order_${userId}`, JSON.stringify(cart), "EX", 600);
-        await delCache(`cart_${userId}`);
-        await delCache(`checkout_order_${userId}`);
+        await setCache(`cart_${userId}`, cart, 600);
 
         res.status(201).json({
             success: true,
