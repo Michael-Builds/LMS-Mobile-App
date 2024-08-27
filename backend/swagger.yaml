@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: E-commerce API
   version: 1.0.0
-  description: Comprehensive API documentation for user, order, course, and cart management.
+  description: Comprehensive API documentation for user, order, course, cart, and layout management.
 
 servers:
   - url: http://localhost:4000
@@ -21,6 +21,8 @@ tags:
     description: Endpoints related to cart management
   - name: Analytics
     description: Endpoints related to generating analytics reports
+  - name: Layout
+    description: Endpoints related to managing layouts
 
 paths:
   ### User Routes ###
@@ -442,7 +444,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AnalyticsResponse"
+                $ref: "#/components/schemas/UserAnalytics"
         "500":
           description: Internal server error
 
@@ -458,7 +460,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AnalyticsResponse"
+                $ref: "#/components/schemas/CourseAnalytics"
         "500":
           description: Internal server error
 
@@ -474,7 +476,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OrderAnalyticsResponse"
+                $ref: "#/components/schemas/OrderAnalytics"
         "500":
           description: Internal server error
 
@@ -891,6 +893,122 @@ paths:
         "500":
           description: Internal server error
 
+  ### Layout Routes ###
+  /layout/create-layout:
+    post:
+      summary: Create a new layout
+      tags: [Layout]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLayout"
+      responses:
+        "201":
+          description: Layout created successfully
+        "400":
+          description: Layout type already exists
+        "500":
+          description: Internal server error
+
+  /layout/get-layouts:
+    get:
+      summary: Get all layouts
+      tags: [Layout]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Layouts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LayoutResponse"
+        "404":
+          description: No layouts found
+        "500":
+          description: Internal server error
+
+  /layout/edit-layout/{id}:
+    put:
+      summary: Edit an existing layout
+      tags: [Layout]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The ID of the layout to edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditLayout"
+      responses:
+        "200":
+          description: Layout updated successfully
+        "400":
+          description: Invalid layout type
+        "404":
+          description: Layout not found
+        "500":
+          description: Internal server error
+
+  /layout/delete-layout/{id}:
+    delete:
+      summary: Delete a layout by ID
+      tags: [Layout]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: The ID of the layout to delete
+      responses:
+        "200":
+          description: Layout deleted successfully
+        "404":
+          description: Layout not found
+        "500":
+          description: Internal server error
+
+  /layout/get-layout-by-type/{type}:
+    get:
+      summary: Get a layout by type
+      tags: [Layout]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: type
+          schema:
+            type: string
+          required: true
+          description: The type of layout to retrieve (e.g., "Banner", "FAQ", "Categories")
+      responses:
+        "200":
+          description: Layout retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetLayoutResponse"
+        "404":
+          description: No layout found for the specified type
+        "500":
+          description: Internal server error
+
 components:
   schemas:
     UserRegistration:
@@ -1302,7 +1420,8 @@ components:
               quantity:
                 type: integer
                 description: The quantity of the product
-    UserAnalyticsResponse:
+
+    UserAnalytics:
       type: object
       properties:
         last12Months:
@@ -1327,7 +1446,7 @@ components:
                 type: number
                 description: Any additional sum calculated (optional)
 
-    CourseAnalyticsResponse:
+    CourseAnalytics:
       type: object
       properties:
         last12Months:
@@ -1352,7 +1471,7 @@ components:
                 type: number
                 description: Any additional sum calculated (optional)
 
-    OrderAnalyticsResponse:
+    OrderAnalytics:
       type: object
       properties:
         last12Months:
@@ -1370,7 +1489,167 @@ components:
               totalAmount:
                 type: number
                 description: Total order amount for the given month
-                
+
+    CreateLayout:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          description: The type of layout (Banner, FAQ, Categories)
+        image:
+          type: string
+          description: The URL of the image for Banner type
+        title:
+          type: string
+          description: The title for Banner type
+        subTitle:
+          type: string
+          description: The subtitle for Banner type
+        faqData:
+          type: array
+          description: The FAQ data for FAQ type
+          items:
+            type: object
+            properties:
+              question:
+                type: string
+                description: The question text
+              answer:
+                type: string
+                description: The answer text
+        categoriesData:
+          type: array
+          description: The categories data for Categories type
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+                description: The category title
+
+    LayoutResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the layout
+        type:
+          type: string
+          description: The type of layout
+        banner:
+          type: object
+          description: Banner layout data
+          properties:
+            image:
+              type: object
+              properties:
+                public_id:
+                  type: string
+                url:
+                  type: string
+            title:
+              type: string
+            subTitle:
+              type: string
+        faq:
+          type: array
+          description: FAQ layout data
+          items:
+            type: object
+            properties:
+              question:
+                type: string
+              answer:
+                type: string
+        categories:
+          type: array
+          description: Categories layout data
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+
+    GetLayoutResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the layout
+        type:
+          type: string
+          description: The type of layout (Banner, FAQ, Categories)
+        banner:
+          type: object
+          description: Banner layout data
+          properties:
+            image:
+              type: object
+              properties:
+                public_id:
+                  type: string
+                url:
+                  type: string
+            title:
+              type: string
+            subTitle:
+              type: string
+        faq:
+          type: array
+          description: FAQ layout data
+          items:
+            type: object
+            properties:
+              question:
+                type: string
+              answer:
+                type: string
+        categories:
+          type: array
+          description: Categories layout data
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+
+    EditLayout:
+      type: object
+      properties:
+        type:
+          type: string
+          description: The type of layout (Banner, FAQ, Categories)
+        image:
+          type: string
+          description: The URL of the image for Banner type
+        title:
+          type: string
+          description: The title for Banner type
+        subTitle:
+          type: string
+          description: The subtitle for Banner type
+        faqData:
+          type: array
+          description: The FAQ data for FAQ type
+          items:
+            type: object
+            properties:
+              question:
+                type: string
+              answer:
+                type: string
+
+        categoriesData:
+          type: array
+          description: The categories data for Categories type
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+
   securitySchemes:
     bearerAuth:
       type: http
