@@ -16,7 +16,9 @@ import {
     approveAccountRecovery,
     rejectAccountRecovery,
     suspendAccount,
-    updateUserRole
+    updateUserRole,
+    resetPasswordRequest,  
+    resetPassword
 } from '../controllers/user.controller';
 import { authorizeRoles, isAuthenticated } from '../middleware/auth.middleware';
 import { getNotifications, getUserNotifications, updateNotifications } from '../controllers/notification.controller';
@@ -29,6 +31,8 @@ userRouter.post("/account-activate", activateAccount);
 userRouter.post("/login", userLogin);
 userRouter.get("/refresh-token", updateAccessToken);
 userRouter.post("/social-auth", socialAuth);
+userRouter.post("/request-password-reset", resetPasswordRequest);  
+userRouter.post("/reset-password", resetPassword); 
 
 // Authenticated User Routes
 userRouter.get("/logout", isAuthenticated, userLogout);
@@ -53,9 +57,8 @@ userRouter.post("/reject-recovery/:id", isAuthenticated, authorizeRoles("admin")
 userRouter.post("/suspend-user/:id", isAuthenticated, authorizeRoles("admin"), suspendAccount);
 
 // Admin routes to get notifications and updating notifications
-userRouter.get("/get-notifications", isAuthenticated, authorizeRoles("admin"), getNotifications)
-userRouter.put("/update-notifications/:id", isAuthenticated, authorizeRoles("admin"), updateNotifications)
-
+userRouter.get("/get-notifications", isAuthenticated, authorizeRoles("admin"), getNotifications);
+userRouter.put("/update-notifications/:id", isAuthenticated, authorizeRoles("admin"), updateNotifications);
 
 // Admin Route to Update User Role
 userRouter.put("/update-role", isAuthenticated, authorizeRoles("admin"), updateUserRole);

@@ -1,13 +1,16 @@
-import React, { useState } from "react"
+import AuthButton from "@/components/buttons/auth.button"
+import { styles } from "@/styles/auth/auth"
+import { auth } from "@/utils/Endpoints"
 import {
-  ActivityIndicator,
-  Image,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native"
+  Nunito_400Regular,
+  Nunito_500Medium,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+} from "@expo-google-fonts/nunito"
+import {
+  Raleway_600SemiBold,
+  Raleway_700Bold,
+} from "@expo-google-fonts/raleway"
 import {
   Entypo,
   FontAwesome,
@@ -15,20 +18,21 @@ import {
   Ionicons,
   SimpleLineIcons,
 } from "@expo/vector-icons"
-import { LinearGradient } from "expo-linear-gradient"
-import {
-  Nunito_400Regular,
-  Nunito_700Bold,
-  Nunito_500Medium,
-  Nunito_600SemiBold,
-} from "@expo-google-fonts/nunito"
-import {
-  Raleway_700Bold,
-  Raleway_600SemiBold,
-} from "@expo-google-fonts/raleway"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import axios from "axios"
 import { useFonts } from "expo-font"
-import { styles } from "@/styles/auth/auth"
+import { LinearGradient } from "expo-linear-gradient"
 import { router } from "expo-router"
+import React, { useState } from "react"
+import {
+  Image,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from "react-native"
+import { Toast } from "react-native-toast-notifications"
 
 export default function SignUpScreen() {
   let [fontsLoaded, fontError] = useFonts({
@@ -87,8 +91,41 @@ export default function SignUpScreen() {
     setUserInfo({ ...userInfo, password: value })
   }
 
-  const handleSignUp = () => {
-    router.push("/verifyAccount")
+  const handleSignUp = async () => {
+    setRequired("")
+
+    if (!userInfo.fullname || !userInfo.email || !userInfo.password) {
+      setRequired("This field is required")
+      return
+    }
+    setButtonSpinner(true)
+
+    try {
+      const res = await axios.post(`${auth}/register`, {
+        fullname: userInfo.fullname,
+        email: userInfo.email,
+        password: userInfo.password,
+      })
+
+      await AsyncStorage.setItem("activation-token", res.data.activationToken)
+
+      Toast.show(res.data.message, {
+        type: "success",
+        animationType: "zoom-in",
+      })
+      setUserInfo({
+        fullname: "",
+        email: "",
+        password: "",
+      })
+      setButtonSpinner(false)
+      router.push("/verifyAccount")
+    } catch (err: any) {
+      Toast.show("Error Creating Account", {
+        type: "danger",
+        animationType: "zoom-in",
+      })
+    }
   }
 
   return (
@@ -122,7 +159,7 @@ export default function SignUpScreen() {
               size={20}
               color={"#A1A1A1"}
             />
-            {required && (
+            {!userInfo.fullname && required && (
               <View style={styles.errorContainer}>
                 <Entypo name="cross" size={18} color={"red"} />
                 <Text style={styles.errorText}>This field is required</Text>
@@ -136,7 +173,7 @@ export default function SignUpScreen() {
               value={userInfo.email}
               placeholder="Email Address"
               onChangeText={(value) => {
-                setUserInfo({ ...userInfo, email: value })
+                setUserInfo({ ...userInfo, email: value.toLowerCase() })
               }}
             />
             <Fontisto
@@ -145,7 +182,7 @@ export default function SignUpScreen() {
               size={20}
               color={"#A1A1A1"}
             />
-            {required && (
+            {!userInfo.email && required && (
               <View style={styles.errorContainer}>
                 <Entypo name="cross" size={18} color={"red"} />
                 <Text style={styles.errorText}>This field is required</Text>
@@ -185,20 +222,11 @@ export default function SignUpScreen() {
               </View>
             )}
           </View>
-          <TouchableOpacity style={styles.buttonWrapper} onPress={handleSignUp}>
-            {buttonSpinner ? (
-              <ActivityIndicator size="small" color={"white"} />
-            ) : (
-              <Text
-                style={[
-                  styles.buttonText,
-                  { fontFamily: "Nunito_600SemiBold" },
-                ]}
-              >
-                Sign Up
-              </Text>
-            )}
-          </TouchableOpacity>
+          <AuthButton
+            title="Sign Up"
+            onPress={handleSignUp}
+            loading={buttonSpinner}
+          />
           <Text style={styles.option}>Or</Text>
           <View
             style={{

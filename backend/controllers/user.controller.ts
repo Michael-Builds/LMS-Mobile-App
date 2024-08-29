@@ -4,11 +4,11 @@ import { Request, Response, NextFunction } from "express";
 import userModel, { IUser } from "../model/user.model";
 import ErrorHandler from "../utils/ErrorHandler";
 import jwt, { JwtPayload, Secret } from "jsonwebtoken";
-import { ACCESS_TOKEN, ACCESS_TOKEN_EXPIRY, ACTIVATION_SECRET, REFRESH_TOKEN, REFRESH_TOKEN_EXPIRY } from '../config';
+import { ACCESS_TOKEN, ACCESS_TOKEN_EXPIRY, ACTIVATION_SECRET, REFRESH_TOKEN, REFRESH_TOKEN_EXPIRY, RESET_PASSWORD_SECRET } from '../config';
 import sendEmail from '../utils/sendEmail';
 import { accessTokenOptions, refreshTokenOptions, sendToken } from '../utils/jwt';
 import { redis } from '../utils/redis';
-import { getUserById, accountSuspension, updateUserRoleService } from '../services/user.services';
+import { getUserById, accountSuspension, updateUserRoleService, requestPasswordReset } from '../services/user.services';
 import cloudinary from "cloudinary"
 import deactivatedModel from '../model/deactivate.model';
 import pendingActivationModel from '../model/pendingActivation.model';
@@ -95,46 +95,45 @@ interface IActivationRequest {
 
 // Account activation handler
 export const activateAccount = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
-    // Destructure activation token and activation code from the request body
     const { activation_token, activation_code } = req.body as IActivationRequest;
 
     try {
-        // Verify the activation token using the secret key
         const decoded = jwt.verify(
             activation_token,
             ACTIVATION_SECRET as string
         ) as { user: { email: string }; activationCode: string };
 
-        // Extract the user details and activation code from the decoded token
         const { user, activationCode } = decoded;
 
-        // Compare the provided activation code with the one in the token
         if (activationCode !== activation_code) {
             return next(new ErrorHandler("Invalid activation code", 400));
         }
 
-        // Find the user by email and update their verification status if not already verified
-        const existingUser = await userModel.findOneAndUpdate(
-            { email: user.email, isVerified: false },
-            { $set: { isVerified: true } },
-            { new: true }
-        );
+        const existingUser = await userModel.findOne({ email: user.email });
 
-        // If no matching unverified user is found, return an error
         if (!existingUser) {
-            return next(new ErrorHandler("Invalid user or already verified", 400));
+            return next(new ErrorHandler("User not found", 404));
         }
 
-        // If the account is successfully activated, send a success response
+        if (existingUser.isVerified) {
+            return next(new ErrorHandler("User is already verified", 400));
+        }
+
+        existingUser.isVerified = true;
+        await existingUser.save();
+
         res.status(200).json({
             success: true,
             message: "Account activated successfully",
         });
 
     } catch (err: any) {
-        // Handle errors such as expired or invalid tokens
-        const errorMessage = err.name === 'TokenExpiredError' ? "Activation link has expired" : "Invalid activation link";
-        return next(new ErrorHandler(errorMessage, 400));
+        if (err.name === 'TokenExpiredError') {
+            return next(new ErrorHandler("Activation link has expired", 400));
+        } else if (err.name === 'JsonWebTokenError') {
+            return next(new ErrorHandler("Invalid activation link", 400));
+        }
+        return next(new ErrorHandler("Activation failed", 500));
     }
 });
 
@@ -223,7 +222,7 @@ export const userLogin = CatchAsyncErrors(async (req: Request, res: Response, ne
 
         // Save user session in Redis with a 1-hour expiration
         await setCache(user?.id, user, 3600)
-       
+
         // If the credentials are correct, generate tokens and send them in the response
         sendToken(user, 200, res);
     } catch (err: any) {
@@ -265,8 +264,9 @@ export const userLogout = CatchAsyncErrors(async (req: Request, res: Response, n
 // Update access token handler
 export const updateAccessToken = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const refresh_token = req.cookies.refresh_token as string;
-
+        // const refresh_token = req.cookies.refresh_token as string;
+        const refresh_token = req.headers["refresh-token"] as string;
+        
         const decoded = jwt.verify(refresh_token, REFRESH_TOKEN as string) as JwtPayload;
         const message = "Couldn't refresh token";
 
@@ -309,6 +309,48 @@ export const updateAccessToken = CatchAsyncErrors(async (req: Request, res: Resp
     }
 });
 
+
+export const resetPasswordRequest = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
+
+    try {
+        await requestPasswordReset(email);
+        res.status(200).json({
+            success: true,
+            message: 'Password reset email sent successfully',
+        });
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+});
+
+interface ResetPasswordTokenPayload extends JwtPayload {
+    id: string;
+}
+
+export const resetPassword = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    const { token, newPassword } = req.body;
+
+    try {
+        const decoded = jwt.verify(token, RESET_PASSWORD_SECRET || "") as ResetPasswordTokenPayload;
+        const user = await userModel.findById(decoded.id);
+
+        if (!user) {
+            throw new ErrorHandler('Invalid or expired token', 400);
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Password reset successfully',
+        });
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, error.statusCode || 500));
+    }
+});
+
 // get user infor handler
 export const getUserInfo = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -345,7 +387,7 @@ export const getUserInfo = CatchAsyncErrors(async (req: Request, res: Response, 
         }
 
         // Retrieve user details from Redis or database
-        const userSession =  await getCache(userId);
+        const userSession = await getCache(userId);
 
         console.log("User session from Redis:", userSession);
 
@@ -512,7 +554,7 @@ export const updatePassword = CatchAsyncErrors(async (req: Request, res: Respons
 
         // Convert user ID to a string explicitly and update Redis
         await setCache(String(req.user?._id), user, 86400);
-        
+
         // Create a notification for the user
         await notificatioModel.create({
             userId: user._id,

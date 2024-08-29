@@ -134,6 +134,64 @@ paths:
         "500":
           description: Internal server error
 
+  /auth/api/reset-password-request:
+    post:
+      summary: Request a password reset
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        "200":
+          description: Password reset email sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Password reset email sent successfully
+        "404":
+          description: No user found with this email
+        "500":
+          description: Internal server error
+
+  /auth/api/reset-password:
+    post:
+      summary: Reset user password
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPassword"
+      responses:
+        "200":
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Password reset successfully
+        "400":
+          description: Invalid or expired token
+        "500":
+          description: Internal server error
+
   /auth/api/get-user:
     get:
       summary: Get authenticated user's information
@@ -252,6 +310,7 @@ paths:
         "500":
           description: Internal server error
 
+  ### Admin Routes ###
   /auth/api/get-users:
     get:
       summary: Get all users (Admin only)
@@ -1068,6 +1127,31 @@ components:
         token:
           type: string
           description: JWT access token
+
+    ResetPasswordRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          description: The email address associated with the user's account
+          example: user@example.com
+
+    ResetPassword:
+      type: object
+      required:
+        - token
+        - newPassword
+      properties:
+        token:
+          type: string
+          description: The JWT token received in the password reset email
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        newPassword:
+          type: string
+          description: The new password for the user's account
+          example: NewSecurePassword123!
 
     TokenResponse:
       type: object

@@ -1,13 +1,16 @@
-import React, { useState } from "react"
+import AuthButton from "@/components/buttons/auth.button"
+import { styles } from "@/styles/auth/auth"
+import { handleLogin } from "@/utils/Functions"
 import {
-  ActivityIndicator,
-  Image,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native"
+  Nunito_400Regular,
+  Nunito_500Medium,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+} from "@expo-google-fonts/nunito"
+import {
+  Raleway_600SemiBold,
+  Raleway_700Bold,
+} from "@expo-google-fonts/raleway"
 import {
   Entypo,
   FontAwesome,
@@ -15,20 +18,18 @@ import {
   Ionicons,
   SimpleLineIcons,
 } from "@expo/vector-icons"
-import { LinearGradient } from "expo-linear-gradient"
-import {
-  Nunito_400Regular,
-  Nunito_700Bold,
-  Nunito_500Medium,
-  Nunito_600SemiBold,
-} from "@expo-google-fonts/nunito"
-import {
-  Raleway_700Bold,
-  Raleway_600SemiBold,
-} from "@expo-google-fonts/raleway"
 import { useFonts } from "expo-font"
-import { styles } from "@/styles/auth/auth"
+import { LinearGradient } from "expo-linear-gradient"
 import { router } from "expo-router"
+import React, { useState } from "react"
+import {
+  Image,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native"
 
 export default function LoginScreen() {
   let [fontsLoaded, fontError] = useFonts({
@@ -86,7 +87,21 @@ export default function LoginScreen() {
     setUserInfo({ ...userInfo, password: value })
   }
 
-  const handleSignIn = () => {}
+  const handleSignIn = async () => {
+    setRequired("")
+
+    if (!userInfo.email || !userInfo.password) {
+      setRequired("This field is required")
+      return
+    }
+    setButtonSpinner(true)
+    try {
+      await handleLogin(userInfo.email, userInfo.password)
+      setUserInfo({ email: "", password: "" })
+    } catch (err: any) {
+      setButtonSpinner(false)
+    }
+  }
 
   return (
     <LinearGradient colors={["#E5ECF9", "#F6F7F9"]} style={{ flex: 1 }}>
@@ -110,7 +125,7 @@ export default function LoginScreen() {
               value={userInfo.email}
               placeholder="Email Address"
               onChangeText={(value) => {
-                setUserInfo({ ...userInfo, email: value })
+                setUserInfo({ ...userInfo, email: value.toLowerCase() })
               }}
             />
             <Fontisto
@@ -119,7 +134,7 @@ export default function LoginScreen() {
               size={20}
               color={"#A1A1A1"}
             />
-            {required && (
+            {!userInfo.email && required && (
               <View style={styles.errorContainer}>
                 <Entypo name="cross" size={18} color={"red"} />
                 <Text style={styles.errorText}>This field is required</Text>
@@ -162,29 +177,17 @@ export default function LoginScreen() {
 
           <TouchableOpacity onPress={() => router.push("/forgot-password")}>
             <Text
-              style={[
-                styles.forgotSection,
-                { fontFamily: "Nunito_600SemiBold" },
-              ]}
+              style={[styles.forgotSection, { fontFamily: "Nunito_500Medium" }]}
             >
               Forgot Password
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.buttonWrapper} onPress={handleSignIn}>
-            {buttonSpinner ? (
-              <ActivityIndicator size="small" color={"white"} />
-            ) : (
-              <Text
-                style={[
-                  styles.buttonText,
-                  { fontFamily: "Nunito_600SemiBold" },
-                ]}
-              >
-                Login
-              </Text>
-            )}
-          </TouchableOpacity>
+          <AuthButton
+            title="Login"
+            onPress={handleSignIn}
+            loading={buttonSpinner}
+          />
           <Text style={styles.option}>Or</Text>
           <View
             style={{

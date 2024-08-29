@@ -1,15 +1,18 @@
-import { NextFunction, Response } from "express";
-import { redis } from "../utils/redis";
-import userModel, { IUser } from "../model/user.model";
-import notificatioModel from "../model/notification.model";
-import sendEmail from "../utils/sendEmail";
+import { NextFunction, Request, Response } from "express";
 import deactivatedModel from "../model/deactivate.model";
+import notificatioModel from "../model/notification.model";
+import userModel, { IUser } from "../model/user.model";
 import ErrorHandler from "../utils/ErrorHandler";
 import { getCache } from "../utils/catche.management";
+import sendEmail from "../utils/sendEmail";
+import { RESET_PASSWORD_SECRET, RESET_PASSWORD_EXPIRY } from '../config';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import { CatchAsyncErrors } from "../middleware/catchAsyncError";
 
 // Function to get a user by their ID
 export const getUserById = async (id: string, res: Response) => {
-   
+
     // Find the user in the database by their ID
     const userData = await getCache(id);
 
@@ -59,7 +62,7 @@ export const accountSuspension = async (user: IUser) => {
 export const updateUserRoleService = async (userId: string, newRole: string) => {
     // Validate new role (if applicable)
     const validRoles = ['admin', 'student', 'tutor'];
-    
+
     if (!validRoles.includes(newRole)) {
         throw new ErrorHandler(`Invalid role: ${newRole}`, 400);
     }
@@ -82,7 +85,7 @@ export const updateUserRoleService = async (userId: string, newRole: string) => 
     await sendEmail({
         email: user.email,
         subject: "Role Update Notification",
-        template: "role-update.ejs", 
+        template: "role-update.ejs",
         data: {
             fullname: user.fullname,
             role: newRole,
@@ -91,3 +94,33 @@ export const updateUserRoleService = async (userId: string, newRole: string) => 
 
     return user;
 };
+
+
+export const requestPasswordReset = async (email: any) => {
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+        throw new ErrorHandler('No user found with this email', 404);
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    const resetTokenSigned = jwt.sign({ id: user._id, resetToken }, RESET_PASSWORD_SECRET || "", {
+        expiresIn: RESET_PASSWORD_EXPIRY,
+    });
+
+    const resetLink = `myapp://reset-password?token=${resetTokenSigned}`;
+
+    await sendEmail({
+        email: user.email,
+        subject: 'Password Reset Request',
+        template: 'reset-password.ejs',
+        data: {
+            fullname: user.fullname,
+            resetLink,
+        },
+    });
+
+    return resetLink;
+};
+

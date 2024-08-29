@@ -11,7 +11,7 @@ cloudinary.config({
     api_secret: CLOUD_SECRET_KEY
 })
 
-app.listen(PORT, () => {
+app.listen(PORT || 4000, () => {
     console.log(colors.bgCyan.white(`Server running in ${NODE_ENV} mode on port ${PORT}`))
     connectDB();
 });

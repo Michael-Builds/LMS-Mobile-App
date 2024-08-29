@@ -7,7 +7,8 @@ import { redis } from "../utils/redis";
 import { IUser } from "../model/user.model";
 
 export const isAuthenticated = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
-    const access_token = req.cookies.access_token;
+    // const access_token = req.cookies.access_token as string;
+    const access_token = req.headers["access-token"] as string;
 
     if (!access_token) {
         return next(new ErrorHandler("Please login to access this resource", 401));
@@ -29,8 +30,7 @@ export const isAuthenticated = CatchAsyncErrors(async (req: Request, res: Respon
         req.user = JSON.parse(user);
         next();
     } catch (error: any) {
-        console.error('An error occurred', error.message)
-        return next(new ErrorHandler("Invalid or expired token", 401));
+        return next(new ErrorHandler("Invalid or expired token", 500));
     }
 });
 

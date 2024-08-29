@@ -11,3 +11,4 @@ analyticsRouter.get("/get-course-analytics", isAuthenticated, authorizeRoles("ad
 analyticsRouter.get("/get-order-analytics", isAuthenticated, authorizeRoles("admin"), getOrderAnalytics);
 
 export default analyticsRouter;
+

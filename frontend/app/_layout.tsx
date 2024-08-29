@@ -3,16 +3,15 @@ import { useFonts } from "expo-font"
 import * as SplashScreen from "expo-splash-screen"
 import { useEffect, useState } from "react"
 import "react-native-reanimated"
-import { View } from "react-native"
 import { Stack } from "expo-router"
 import CustomSplashScreen from "@/components/CustomSplashScreen"
 export { ErrorBoundary } from "expo-router"
+import { ToastProvider } from "react-native-toast-notifications"
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync()
 
 export default function RootLayout() {
-
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     ...FontAwesome.font,
@@ -44,22 +43,16 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   return (
-    <>
-      {isLoggedIn ? (
-        <View></View>
-      ) : (
+    <ToastProvider>
         <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
+          <Stack.Screen name="index"/>
           <Stack.Screen name="(routes)/welcome-intro/index" />
           <Stack.Screen name="(routes)/login/index" />
           <Stack.Screen name="(routes)/signup/index" />
           <Stack.Screen name="(routes)/forgot-password/index" />
-          <Stack.Screen name="(routes)/verifyAccount/index" />
         </Stack>
-      )}
-    </>
+    </ToastProvider>
   )
 }
