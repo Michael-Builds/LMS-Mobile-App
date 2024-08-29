@@ -12,7 +12,7 @@ export default function TabsLayout() {
     return null
   }
 
-  const { user } = useUser()
+  // const { user } = useUser()
 
   return (
     <Tabs
@@ -30,7 +30,8 @@ export default function TabsLayout() {
             iconName = require("@/assets/icons/book.png")
             label = "Courses"
           } else if (route.name === "profile/index") {
-            iconName = user?.avatar || require("@/assets/icons/user.png")
+            // user?.avatar ||
+            iconName = require("@/assets/icons/user.png")
             label = "Profile"
           }
 
@@ -61,8 +62,7 @@ export default function TabsLayout() {
         tabBarShowLabel: false,
         tabBarStyle: styles.tabBar,
         tabBarActiveTintColor: "red",
-      })}
-    >
+      })}>
       <Tabs.Screen name="index" />
       <Tabs.Screen name="search/index" />
       <Tabs.Screen name="courses/index" />
