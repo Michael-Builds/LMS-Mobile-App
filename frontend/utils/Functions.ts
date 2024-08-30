@@ -1,19 +1,16 @@
-import * as SecureStore from "expo-secure-store"
 import { router } from "expo-router";
 import axios from "axios";
 import { auth } from "./Endpoints";
 import { Toast } from "react-native-toast-notifications";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Utility function for storing tokens securely
-export const storeTokens = async (
-  accessToken: string,
-  refreshToken: string
-) => {
+export const storeTokens = async (accessToken: string, refreshToken: string) => {
   try {
-    await SecureStore.setItemAsync("access_token", accessToken)
-    await SecureStore.setItemAsync("refresh_token", refreshToken)
+    await AsyncStorage.setItem("access_token", accessToken);
+    await AsyncStorage.setItem("refresh_token", refreshToken);
   } catch (error) {
-    throw new Error("Failed to store tokens securely")
+    throw new Error("Failed to store tokens securely");
   }
 }
 
@@ -24,13 +21,10 @@ export const handleLogin = async (email: string, password: string) => {
     const response = await axios.post(`${auth}/login`, { email, password });
     const { accessToken, refreshToken } = response.data;
 
+    // Store the tokens securely
     await storeTokens(accessToken, refreshToken);
 
-    // Toast.show("Logged in successfully", {
-    //   type: "success",
-    //   animationType: "zoom-in",
-    // });
-
+    // Redirect to the main app after successful login
     router.push("/(tabs)");
   } catch (error: any) {
     const errorMessage = error.response?.data?.message || error.message || "An error occurred during login";

@@ -1,4 +1,3 @@
-
 export const onboardingSwiperData: onboardingSwiperDataType[] = [
   {
     id: 1,
@@ -24,4 +23,13 @@ export const onboardingSwiperData: onboardingSwiperDataType[] = [
     sortDescription2: "discussion forums.",
     image: require("@/assets/onboarding/onboard4.png"),
   },
+]
+
+export const bannerDataSlider: BannerDataTypes[] = [
+  {
+    bannerImageUrl: require("@/assets/banner/banner5.jpg"),
+  },
+  {
+    bannerImageUrl: require("@/assets/banner/banner5.jpg"),
+  }
 ]

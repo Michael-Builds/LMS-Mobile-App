@@ -1,11 +1,6 @@
 import { styles } from "@/styles/auth/auth"
 import React, { useRef, useState } from "react"
-import {
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native"
+import { Text, TextInput, TouchableOpacity, View } from "react-native"
 import { Nunito_400Regular, useFonts } from "@expo-google-fonts/nunito"
 import { router } from "expo-router"
 import AsyncStorage from "@react-native-async-storage/async-storage"
@@ -94,12 +89,19 @@ export default function VerifyAccountScreen() {
             value={code[index]}
             ref={(el) => (inputs.current[index] = el)}
             autoFocus={index === 0}
+            autoCorrect={false}
+            selectionColor="#C67cc"
+            placeholderTextColor={"#C67cc"}
           />
         ))}
       </View>
 
       <TouchableOpacity style={{ marginTop: 8 }}>
-        <VerifyButton title="Submit" onPress={handleSubmit} loading={buttonSpinner} />
+        <VerifyButton
+          title="Submit"
+          onPress={handleSubmit}
+          loading={buttonSpinner}
+        />
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => router.back()}>

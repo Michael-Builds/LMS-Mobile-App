@@ -12,8 +12,9 @@ export default function TabsLayout() {
     return null
   }
 
-  // const { user } = useUser()
-
+  const { user } = useUser()
+  console.log("User", user)
+  
   return (
     <Tabs
       screenOptions={({ route }) => ({

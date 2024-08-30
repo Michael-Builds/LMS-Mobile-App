@@ -32,8 +32,8 @@ export default function WelcomeIntroScreen() {
           style={{
             alignSelf: "center",
             marginBottom: 30,
-            width: 450,
-            height: 350,
+            width: 350,
+            height: 250,
           }}
         />
         <Text style={[commonStyles.title, { fontFamily: "Raleway_700Bold" }]}>

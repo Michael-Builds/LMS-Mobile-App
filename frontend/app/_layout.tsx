@@ -43,16 +43,23 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-
   return (
     <ToastProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index"/>
-          <Stack.Screen name="(routes)/welcome-intro/index" />
-          <Stack.Screen name="(routes)/login/index" />
-          <Stack.Screen name="(routes)/signup/index" />
-          <Stack.Screen name="(routes)/forgot-password/index" />
-        </Stack>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(routes)/welcome-intro/index" />
+        <Stack.Screen name="(routes)/login/index" />
+        <Stack.Screen name="(routes)/signup/index" />
+        <Stack.Screen name="(routes)/forgot-password/index" />
+        <Stack.Screen
+          name="(routes)/course-details/index"
+          options={{
+            headerShown: true,
+            title: "Course Details",
+            headerBackTitle: "Back",
+          }}
+        />
+      </Stack>
     </ToastProvider>
   )
 }

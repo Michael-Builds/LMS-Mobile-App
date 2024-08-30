@@ -18,3 +18,8 @@ type User = {
   createdAt: Date;
   updatedAt: Date;
 }
+
+type BannerDataTypes = {
+  bannerImageUrl: any;
+}
+

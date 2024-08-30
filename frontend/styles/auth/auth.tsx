@@ -1,25 +1,23 @@
 import { StyleSheet } from "react-native"
-import {
-  widthPercentageToDP as wp
-} from "react-native-responsive-screen"
+import { widthPercentageToDP as wp } from "react-native-responsive-screen"
 
 export const styles = StyleSheet.create({
   signInImage: {
     width: "55%",
-    height: 300,
+    height: 250,
     alignSelf: "center",
-    marginTop: 55,
+    marginTop: 50,
   },
 
   welcomeText: {
     textAlign: "center",
-    fontSize: 24,
+    fontSize: 18,
   },
 
   preText: {
     textAlign: "center",
     marginTop: 10,
-    fontSize: 16,
+    fontSize: 12,
     color: "#575757",
   },
 
@@ -30,11 +28,11 @@ export const styles = StyleSheet.create({
   },
 
   textInput: {
-    height: 55,
+    height: 50,
     marginHorizontal: 16,
     borderRadius: 6,
     paddingLeft: 45,
-    fontSize: 15,
+    fontSize: 14,
     backgroundColor: "#fff",
     color: "#575757",
     borderWidth: 1,
@@ -44,7 +42,7 @@ export const styles = StyleSheet.create({
   icon: {
     position: "absolute",
     left: 28,
-    top: 17.5,
+    top: 16,
   },
 
   icon2: {
@@ -59,7 +57,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 16,
     position: "absolute",
-    top: 55,
+    top: 50,
   },
 
   visibleIcon: {
@@ -77,7 +75,7 @@ export const styles = StyleSheet.create({
   forgotSection: {
     marginHorizontal: 16,
     textAlign: "right",
-    fontSize: 16,
+    fontSize: 14,
   },
 
   buttonText: {

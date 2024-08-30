@@ -21,7 +21,6 @@ import { styles } from "@/styles/auth/auth"
 import { router } from "expo-router"
 
 export default function ForgotPasswordScreen() {
-  
   let [fontsLoaded, fontError] = useFonts({
     Raleway_700Bold,
     Nunito_700Bold,
@@ -63,6 +62,9 @@ export default function ForgotPasswordScreen() {
               value={email}
               placeholder="Email Address"
               onChangeText={(value) => setEmail(value)}
+              autoCorrect={false}
+              selectionColor="#C67cc"
+              placeholderTextColor={"#C67cc"}
             />
             <Fontisto
               style={styles.icon}

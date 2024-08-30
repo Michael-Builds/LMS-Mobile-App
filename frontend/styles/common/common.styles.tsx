@@ -4,8 +4,7 @@ import {
   responsiveWidth,
 } from "react-native-responsive-dimensions"
 import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
+  heightPercentageToDP as hp
 } from "react-native-responsive-screen"
 
 export const commonStyles = StyleSheet.create({

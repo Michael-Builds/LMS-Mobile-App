@@ -9,6 +9,7 @@ import { IUser } from "../model/user.model";
 export const isAuthenticated = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     // const access_token = req.cookies.access_token as string;
     const access_token = req.headers["access-token"] as string;
+    // const access_token = req.headers["access-token"] as string;
 
     if (!access_token) {
         return next(new ErrorHandler("Please login to access this resource", 401));

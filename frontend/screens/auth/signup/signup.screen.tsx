@@ -30,7 +30,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native"
 import { Toast } from "react-native-toast-notifications"
 
@@ -152,6 +152,9 @@ export default function SignUpScreen() {
               onChangeText={(value) => {
                 setUserInfo({ ...userInfo, fullname: value })
               }}
+              autoCorrect={false}
+              selectionColor="#C67cc"
+              placeholderTextColor={"#C67cc"}
             />
             <Fontisto
               style={styles.icon}
@@ -175,6 +178,9 @@ export default function SignUpScreen() {
               onChangeText={(value) => {
                 setUserInfo({ ...userInfo, email: value.toLowerCase() })
               }}
+              autoCorrect={false}
+              selectionColor="#C67cc"
+              placeholderTextColor={"#C67cc"}
             />
             <Fontisto
               style={styles.icon}
@@ -198,6 +204,9 @@ export default function SignUpScreen() {
               defaultValue=""
               placeholder="Enter Password"
               onChangeText={handlePasswordValidation}
+              autoCorrect={false}
+              selectionColor="#C67cc"
+              placeholderTextColor={"#C67cc"}
             />
             <TouchableOpacity
               onPress={() => setPasswordVisible(!isPasswordVisible)}
@@ -234,6 +243,7 @@ export default function SignUpScreen() {
               alignItems: "center",
               justifyContent: "center",
               gap: 10,
+              marginBottom: -10,
             }}
           >
             <TouchableOpacity>
@@ -247,14 +257,14 @@ export default function SignUpScreen() {
             </TouchableOpacity>
           </View>
           <View style={styles.signUpRedirect}>
-            <Text style={{ fontSize: 18, fontFamily: "Nunito_500Medium" }}>
+            <Text style={{ fontSize: 16, fontFamily: "Nunito_500Medium" }}>
               Already have an account?
             </Text>
             <TouchableOpacity onPress={() => router.push("/login")}>
               <Text
                 style={{
                   fontFamily: "Nunito_600SemiBold",
-                  fontSize: 18,
+                  fontSize: 16,
                   color: "#1571ba",
                   marginLeft: 5,
                 }}

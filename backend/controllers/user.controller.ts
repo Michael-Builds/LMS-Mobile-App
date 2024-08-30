@@ -13,7 +13,7 @@ import cloudinary from "cloudinary"
 import deactivatedModel from '../model/deactivate.model';
 import pendingActivationModel from '../model/pendingActivation.model';
 import notificatioModel from '../model/notification.model';
-import { delCache, getCache, setCache } from '../utils/catche.management';
+import { delCache, setCache } from '../utils/catche.management';
 
 // Account registration handler
 export const accountRegister = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -266,7 +266,7 @@ export const updateAccessToken = CatchAsyncErrors(async (req: Request, res: Resp
     try {
         // const refresh_token = req.cookies.refresh_token as string;
         const refresh_token = req.headers["refresh-token"] as string;
-        
+
         const decoded = jwt.verify(refresh_token, REFRESH_TOKEN as string) as JwtPayload;
         const message = "Couldn't refresh token";
 
@@ -387,14 +387,13 @@ export const getUserInfo = CatchAsyncErrors(async (req: Request, res: Response, 
         }
 
         // Retrieve user details from Redis or database
-        const userSession = await getCache(userId);
-
-        console.log("User session from Redis:", userSession);
+        const userSession = await redis.get(userId);
 
         if (userSession) {
             const userDetails = JSON.parse(userSession);
             res.status(200).json({
                 success: true,
+                message: "User retrieved successfully",
                 user: userDetails
             });
         } else {
