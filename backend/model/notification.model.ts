@@ -5,6 +5,8 @@ export interface INotification extends Document {
     message: string;
     status: string;
     userId: string;
+    createdAt?: Date; 
+    updatedAt?: Date; 
 }
 
 const notificationSchema = new Schema<INotification>({
@@ -23,7 +25,8 @@ const notificationSchema = new Schema<INotification>({
     status: {
         type: String,
         required: true,
-        default: "unread"
+        default: "unread",
+        enum: ['read', 'unread'],
     },
 }, { timestamps: true })
 

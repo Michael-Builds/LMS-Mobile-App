@@ -3,6 +3,8 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 export interface ICart extends Document {
     userId: string;
     courses: Array<{ courseId: mongoose.Types.ObjectId, quantity: number }>;
+    createdAt?: Date; 
+    updatedAt?: Date; 
 }
 
 const CartSchema = new Schema<ICart>({
