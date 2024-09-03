@@ -1,20 +1,18 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native"
-import React from "react"
-import {
-  responsiveHeight,
-  responsiveWidth,
-} from "react-native-responsive-dimensions"
-import { FontAwesome, Ionicons } from "@expo/vector-icons"
 import {
   Nunito_400Regular,
   Nunito_600SemiBold,
 } from "@expo-google-fonts/nunito"
+import { FontAwesome, Ionicons } from "@expo/vector-icons"
 import { useFonts } from "expo-font"
-import {
-  heightPercentageToDP as hp,
-  widthPercentageToDP as wp,
-} from "react-native-responsive-screen"
 import { router } from "expo-router"
+import React from "react"
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native"
+import {
+  responsiveWidth
+} from "react-native-responsive-dimensions"
+import {
+  widthPercentageToDP as wp
+} from "react-native-responsive-screen"
 
 export default function CourseCard({ item }: { item: CoursesType }) {
   let [fontsLoaded, fontError] = useFonts({

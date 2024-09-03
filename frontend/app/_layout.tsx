@@ -59,6 +59,23 @@ function RootLayoutNav() {
             headerBackTitle: "Back",
           }}
         />
+        <Stack.Screen
+          name="(routes)/cart/index"
+          options={{
+            headerShown: true,
+            title: "Cart Items",
+            headerBackTitle: "Back",
+          }}
+        />
+
+        <Stack.Screen
+          name="(routes)/checkout/index"
+          options={{
+            headerShown: true,
+            title: "Checkout",
+            headerBackTitle: "Back",
+          }}
+        />
       </Stack>
     </ToastProvider>
   )

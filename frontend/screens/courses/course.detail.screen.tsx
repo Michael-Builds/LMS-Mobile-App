@@ -1,34 +1,44 @@
-import React, { useState } from "react"
+import CourseLesson from "@/components/courses/course.lesson"
+import ReviewCard from "@/components/reviews/review"
+import { cart } from "@/utils/Endpoints"
 import {
+  Nunito_400Regular,
+  Nunito_500Medium,
+  Nunito_600SemiBold,
+} from "@expo-google-fonts/nunito"
+import { FontAwesome, Ionicons } from "@expo/vector-icons"
+import axios from "axios"
+import { useFonts } from "expo-font"
+import { LinearGradient } from "expo-linear-gradient"
+import { router, useLocalSearchParams } from "expo-router"
+import React, { useEffect, useState } from "react"
+import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Image,
 } from "react-native"
-import { useLocalSearchParams } from "expo-router"
-import { LinearGradient } from "expo-linear-gradient"
-import { FontAwesome, Ionicons } from "@expo/vector-icons"
-import { useFonts } from "expo-font"
-import {
-  Nunito_400Regular,
-  Nunito_600SemiBold,
-  Nunito_500Medium,
-} from "@expo-google-fonts/nunito"
-import CourseLesson from "@/components/courses/course.lesson"
-import ReviewCard from "@/components/reviews/review"
+import { Toast } from "react-native-toast-notifications"
 
 export default function CourseDetailScreen() {
-  const [activeButton, setActiveButton] = useState("About")
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [activeSection, setActiveSection] = useState<
+    "About" | "Lessons" | "Reviews"
+  >("About")
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+  const [isPurchased, setIsPurchased] = useState(false)
 
   const { item } = useLocalSearchParams()
+  const courseData: CoursesType = JSON.parse(item as string)
 
-  const courseData: CoursesType = JSON.parse(item as any)
+  useEffect(() => {
+    if (courseData && courseData.purchased) {
+      setIsPurchased(true)
+    }
+  }, [courseData])
 
-
-  let [fontsLoaded, fontError] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
     Nunito_600SemiBold,
     Nunito_500Medium,
@@ -38,41 +48,116 @@ export default function CourseDetailScreen() {
     return null
   }
 
-  const renderButton = (label: string) => {
-    const isActive = activeButton === label
-    return (
-      <TouchableOpacity
+  const handleAddToCart = async () => {
+    try {
+      const response = await axios.post(`${cart}/add-to-cart`, {
+        courseId: courseData._id,
+        quantity: 1,
+      })
+
+      if (response.data.success) {
+        Toast.show(response.data.message || "Added to cart", {
+          type: "success",
+          animationType: "zoom-in",
+        })
+        router.push("/(routes)/cart")
+      } else {
+        Toast.show(response.data.message || "Failed to add to cart", {
+          type: "danger",
+          animationType: "zoom-in",
+        })
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error)
+      if (axios.isAxiosError(error) && error.response) {
+        Toast.show(error.response.data.message || "Failed to add to cart", {
+          type: "danger",
+          animationType: "zoom-in",
+        })
+      } else {
+        Toast.show("An unexpected error occurred", {
+          type: "danger",
+          animationType: "zoom-in",
+        })
+      }
+    }
+  }
+
+  const handleEnrollNow = () => {
+    // Logic to enroll directly or navigate to the checkout page
+    Toast.show("Enrolling now...", {
+      type: "success",
+      animationType: "zoom-in",
+    })
+    router.push("/(routes)/checkout")
+  }
+
+  const renderButton = (label: string) => (
+    <TouchableOpacity
+      style={[
+        styles.tabButton,
+        activeSection === label && styles.activeTabButton,
+      ]}
+      onPress={() => setActiveSection(label as any)}
+    >
+      <Text
         style={[
-          styles.button,
-          {
-            backgroundColor: isActive ? "#1571ba" : "transparent",
-            borderRadius: isActive ? 50 : 0,
-          },
+          styles.tabButtonText,
+          activeSection === label && styles.activeTabButtonText,
         ]}
-        onPress={() => setActiveButton(label)}
       >
-        <Text
-          style={[styles.buttonText, { color: isActive ? "#ffffff" : "#000" }]}
-        >
-          {label}
-        </Text>
-      </TouchableOpacity>
-    )
+        {label}
+      </Text>
+    </TouchableOpacity>
+  )
+
+  const renderSectionContent = () => {
+    switch (activeSection) {
+      case "About":
+        return (
+          <View style={styles.sectionContent}>
+            <Text style={styles.sectionHeader}>About Course</Text>
+            <Text style={styles.sectionDescription}>
+              {isDescriptionExpanded
+                ? courseData.description
+                : courseData.description.slice(0, 302)}
+            </Text>
+            {courseData.description.length > 302 && (
+              <TouchableOpacity
+                onPress={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+              >
+                <Text style={styles.showMoreText}>
+                  {isDescriptionExpanded ? "Show Less -" : "Show More +"}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )
+      case "Lessons":
+        return <CourseLesson courseDetails={courseData} />
+      case "Reviews":
+        return (
+          <View style={styles.reviewsContainer}>
+            {courseData.reviews.map((review, index) => (
+              <ReviewCard reviewsData={review} key={index} />
+            ))}
+          </View>
+        )
+      default:
+        return null
+    }
   }
 
   return (
-    <LinearGradient
-      colors={["#E5ECF9", "#F6F7F9"]}
-      style={{ flex: 1, paddingTop: 25 }}
-    >
+    <LinearGradient colors={["#E5ECF9", "#F6F7F9"]} style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={{ marginHorizontal: 16 }}>
+        <View style={styles.headerContainer}>
           <View style={styles.badgeContainer}>
             <Text style={styles.badgeText}>Best Seller</Text>
           </View>
           <View style={styles.ratingContainer}>
             <View style={styles.ratingBadge}>
-              <FontAwesome name="star" size={14} color={"#FFB800"} />
+              <FontAwesome name="star" size={14} color="#FFB800" />
               <Text style={styles.ratingText}>{courseData.ratings}</Text>
             </View>
           </View>
@@ -96,116 +181,79 @@ export default function CourseDetailScreen() {
           </Text>
         </View>
 
-        <View style={styles.sectionContainer}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Course Prerequisites</Text>
-            {courseData.prerequisites.map(
-              (item: PrerequisitesType, index: number) => (
-                <View key={index} style={styles.listItem}>
-                  <Ionicons name="checkmark-done-outline" size={15} />
-                  <Text style={styles.listItemText}>{item.title}</Text>
-                </View>
-              )
-            )}
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Course Benefits</Text>
-            {courseData.benefits.map((item: BenefitType, index: number) => (
-              <View key={index} style={styles.listItem}>
-                <Ionicons name="checkmark-done-outline" size={15} />
-                <Text style={styles.listItemText}>{item.title}</Text>
-              </View>
-            ))}
-          </View>
+        <View style={styles.sectionListContainer}>
+          <Section
+            title="Course Prerequisites"
+            items={courseData.prerequisites}
+          />
+          <Section title="Course Benefits" items={courseData.benefits} />
         </View>
 
-        <View style={styles.buttonContainer}>
+        <View style={styles.tabContainer}>
           {renderButton("About")}
           {renderButton("Lessons")}
           {renderButton("Reviews")}
         </View>
-        {activeButton === "About" && (
-          <View
-            style={{
-              marginHorizontal: 16,
-              marginVertical: 25,
-              paddingHorizontal: 10,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: 500,
-                fontFamily: "Nunito_600SemiBold",
-              }}
-            >
-              About Course
-            </Text>
-            <Text
-              style={{
-                color: "#525258",
-                fontSize: 16,
-                marginTop: 10,
-                textAlign: "justify",
-                fontFamily: "Nunito_500Medium",
-              }}
-            >
-              {isExpanded
-                ? courseData.description
-                : courseData.description.slice(0, 302)}
-            </Text>
-            {courseData.description.length > 302 && (
-              <TouchableOpacity
-                style={{ marginTop: 3 }}
-                onPress={() => setIsExpanded(!isExpanded)}
-              >
-                <Text
-                  style={{
-                    flexDirection: "row",
-                    gap: 4,
-                    alignItems: "center",
-                    color: "#2467EC",
-                    fontSize: 14,
-                  }}
-                >
-                  {isExpanded ? "Show More" : "Show Less"}
-                  {isExpanded ? "-" : "+"}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-        {activeButton === "Lessons" && (
-          <View
-            style={{
-              marginHorizontal: 16,
-              marginVertical: 25,
-            }}
-          >
-            <CourseLesson courseDetails={courseData} />
-          </View>
-        )}
-        {activeButton === "Reviews" && (
-          <View
-            style={{
-              marginHorizontal: 16,
-              marginVertical: 25,
-            }}
-          >
-            <View style={{ rowGap: 25 }}>
-              {courseData.reviews.map((item: ReviewType, index: number) => (
-                <ReviewCard reviewsData={item} key={index} />
-              ))}
-            </View>
-          </View>
-        )}
+
+        {renderSectionContent()}
       </ScrollView>
+
+      <View style={styles.footerContainer}>
+        {isPurchased ? (
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => router.push("/(routes)/cart")}
+            // onPress={() => router.push("/(routes)/course/" + courseData._id)}
+          >
+            <Text style={styles.actionButtonText}>Go to Course</Text>
+          </TouchableOpacity>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleAddToCart()}
+            >
+              <Text style={styles.actionButtonText}>Add to Cart</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.enrollButton]}
+              onPress={handleEnrollNow}
+            >
+              <Text style={styles.actionButtonText}>Enroll Now</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
     </LinearGradient>
   )
 }
 
+const Section = ({
+  title,
+  items,
+}: {
+  title: string
+  items: { title: string }[]
+}) => (
+  <View style={styles.section}>
+    <Text style={styles.sectionTitle}>{title}</Text>
+    {items.map((item, index) => (
+      <View key={index} style={styles.listItem}>
+        <Ionicons name="checkmark-done-outline" size={15} />
+        <Text style={styles.listItemText}>{item.title}</Text>
+      </View>
+    ))}
+  </View>
+)
+
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 25,
+  },
+  headerContainer: {
+    marginHorizontal: 16,
+  },
   badgeContainer: {
     position: "absolute",
     zIndex: 1,
@@ -216,7 +264,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginLeft: 8,
   },
-
   badgeText: {
     color: "black",
     fontSize: 14,
@@ -283,7 +330,7 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_400Regular",
     fontSize: 14,
   },
-  sectionContainer: {
+  sectionListContainer: {
     flexDirection: "column",
   },
   section: {
@@ -306,7 +353,7 @@ const styles = StyleSheet.create({
     fontFamily: "Nunito_400Regular",
     fontSize: 14,
   },
-  buttonContainer: {
+  tabContainer: {
     flexDirection: "row",
     justifyContent: "center",
     marginTop: 25,
@@ -314,11 +361,72 @@ const styles = StyleSheet.create({
     backgroundColor: "#E1E9F8",
     borderRadius: 50,
   },
-  button: {
+  tabButton: {
     paddingVertical: 10,
     paddingHorizontal: 42,
   },
-  buttonText: {
+  activeTabButton: {
+    backgroundColor: "#1571ba",
+    borderRadius: 50,
+  },
+  tabButtonText: {
+    fontFamily: "Nunito_600SemiBold",
+  },
+  activeTabButtonText: {
+    color: "#ffffff",
+  },
+  sectionContent: {
+    marginHorizontal: 16,
+    marginVertical: 25,
+    paddingHorizontal: 10,
+  },
+  sectionHeader: {
+    fontSize: 16,
+    fontWeight: "500",
+    fontFamily: "Nunito_600SemiBold",
+  },
+  sectionDescription: {
+    color: "#525258",
+    fontSize: 16,
+    marginTop: 10,
+    textAlign: "justify",
+    fontFamily: "Nunito_500Medium",
+  },
+  showMoreText: {
+    marginTop: 3,
+    color: "#2467EC",
+    fontSize: 14,
+  },
+  reviewsContainer: {
+    marginHorizontal: 16,
+    marginVertical: 25,
+    rowGap: 25,
+  },
+  footerContainer: {
+    flexDirection: "row", // Align children in a row
+    justifyContent: "space-between", // Distribute space between buttons
+    backgroundColor: "#FFFFFF",
+    marginVertical: 11,
+    marginHorizontal: 16,
+    marginBottom: 32,
+  },
+  actionButton: {
+    flex: 1, // Make the button take equal space
+    backgroundColor: "#1571ba",
+    paddingVertical: 12,
+    borderRadius: 50,
+    marginHorizontal: 5, // Space between the buttons
+  },
+  enrollButton: {
+    backgroundColor: "#3c8a3f", // Different color for "Enroll Now"
+  },
+  disabledButton: {
+    backgroundColor: "#808080",
+  },
+  actionButtonText: {
+    textAlign: "center",
+    color: "white",
+    fontSize: 16,
     fontFamily: "Nunito_600SemiBold",
   },
 })

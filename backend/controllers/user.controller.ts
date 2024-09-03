@@ -80,7 +80,7 @@ export const createActivationToken = (user: IUser): IActivationToken => {
     const token = jwt.sign(
         { user: { email: user.email }, activationCode },
         ACTIVATION_SECRET as Secret,
-        { expiresIn: "5m" }
+        { expiresIn: "25m" }
     );
 
     // Return the generated token and the activation code

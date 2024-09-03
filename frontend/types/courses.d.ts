@@ -52,6 +52,14 @@ type ThumbnailType = {
     url: string;
 }
 
+
+type CartItemType = {
+    _id: string;
+    courseId: CoursesType;  
+    quantity: number;
+  };
+
+  
 type CoursesType = {
     _id: string;
     name: string;

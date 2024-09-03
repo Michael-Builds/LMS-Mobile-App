@@ -1,20 +1,21 @@
-import { Request, Response, NextFunction } from "express";
-import cartModel from "../model/cart.model";
-import { CatchAsyncErrors } from "../middleware/catchAsyncError";
-import ErrorHandler from "../utils/ErrorHandler";
-import { newOrder } from "../services/order.services";
+import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
-import sendEmail from "../utils/sendEmail";
-import userModel from "../model/user.model";
-import notificatioModel from "../model/notification.model";
+import { CatchAsyncErrors } from "../middleware/catchAsyncError";
+import cartModel from "../model/cart.model";
 import courseModel from "../model/course.model";
+import notificatioModel from "../model/notification.model";
+import userModel from "../model/user.model";
 import { addCourseToCart, removeCourseFromCart } from "../services/cart.services";
-import { delCache, getCache, setCache } from "../utils/catche.management";
+import { newOrder } from "../services/order.services";
+import { getCache, setCache } from "../utils/catche.management";
+import ErrorHandler from "../utils/ErrorHandler";
+import sendEmail from "../utils/sendEmail";
 
 // Add a course to the cart
 export const addToCart = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     const { courseId, quantity } = req.body;
     const userId = req.user?._id as string;
+
 
     if (!mongoose.Types.ObjectId.isValid(courseId)) {
         return next(new ErrorHandler("Invalid course ID", 400));
@@ -81,16 +82,16 @@ export const getCart = CatchAsyncErrors(async (req: Request, res: Response, next
 
     const cacheKey = `cart_${userId}`;
 
-     // Try to retrieve the cart from cache
-     const cachedCart = await getCache(cacheKey);
-     if (cachedCart) {
-         return res.status(200).json({
-             success: true,
-             cart: cachedCart,
-             message: "Cart retrieved from cache successfully",
-         });
+    // Try to retrieve the cart from cache
+    const cachedCart = await getCache(cacheKey);
+    if (cachedCart) {
+        return res.status(200).json({
+            success: true,
+            cart: cachedCart,
+            message: "Cart retrieved from cache successfully",
+        });
     }
-    
+
     const cart = await cartModel.findOne({ userId }).populate("courses.courseId");
 
     if (!cart) {

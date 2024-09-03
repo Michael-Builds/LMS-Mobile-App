@@ -1,18 +1,28 @@
 import useUser from "@/hooks/auth/useUser"
+import useCart from "@/hooks/cart/useCart"
+import { Nunito_400Regular } from "@expo-google-fonts/nunito"
 import { Raleway_600SemiBold } from "@expo-google-fonts/raleway"
 import { Feather } from "@expo/vector-icons"
 import { useFonts } from "expo-font"
+import { router } from "expo-router"
 import React from "react"
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 
 export default function Header() {
   const { user } = useUser()
+  const { cartItems } = useCart()
+
   let [fontsLoaded, fontError] = useFonts({
     Raleway_600SemiBold,
+    Nunito_400Regular,
   })
 
   if (!fontsLoaded && !fontError) {
     return null
+  }
+
+  const handleAddToCart = () => {
+    router.push("/(routes)/cart")
   }
 
   return (
@@ -39,10 +49,24 @@ export default function Header() {
           </Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.bellButton}>
+      <TouchableOpacity
+        onPress={() => handleAddToCart()}
+        style={styles.bellButton}
+      >
         <View>
           <Feather name="shopping-bag" size={26} color={"black"} />
-          <View style={styles.bellContainer}></View>
+          {cartItems.length > 0 && (
+            <View style={styles.bellContainer}>
+              <Text
+                style={{
+                  color: "white",
+                  fontFamily: "Nunito_400Regular",
+                }}
+              >
+                {cartItems.length}
+              </Text>
+            </View>
+          )}
         </View>
       </TouchableOpacity>
     </View>
@@ -96,13 +120,17 @@ const styles = StyleSheet.create({
   },
 
   bellContainer: {
-    width: 10,
-    height: 10,
+    width: 20,
+    height: 20,
     position: "absolute",
     borderRadius: 50,
-    right: 0,
-    top: 0,
+    right: -5,
+    top: -5,
     backgroundColor: "#1571ba",
+    flexDirection: "row",
+    alignContent: "center",
+    justifyContent: "center",
+    fontSize: 14,
   },
 
   helloText: {
