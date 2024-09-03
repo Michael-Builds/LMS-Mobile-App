@@ -17,6 +17,7 @@ import {
   Nunito_500Medium,
 } from "@expo-google-fonts/nunito"
 import CourseLesson from "@/components/courses/course.lesson"
+import ReviewCard from "@/components/reviews/review"
 
 export default function CourseDetailScreen() {
   const [activeButton, setActiveButton] = useState("About")
@@ -25,6 +26,7 @@ export default function CourseDetailScreen() {
   const { item } = useLocalSearchParams()
 
   const courseData: CoursesType = JSON.parse(item as any)
+
 
   let [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
@@ -182,6 +184,20 @@ export default function CourseDetailScreen() {
             }}
           >
             <CourseLesson courseDetails={courseData} />
+          </View>
+        )}
+        {activeButton === "Reviews" && (
+          <View
+            style={{
+              marginHorizontal: 16,
+              marginVertical: 25,
+            }}
+          >
+            <View style={{ rowGap: 25 }}>
+              {courseData.reviews.map((item: ReviewType, index: number) => (
+                <ReviewCard reviewsData={item} key={index} />
+              ))}
+            </View>
           </View>
         )}
       </ScrollView>

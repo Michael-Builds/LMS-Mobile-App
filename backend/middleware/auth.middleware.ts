@@ -3,13 +3,14 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { CatchAsyncErrors } from "./catchAsyncError";
 import ErrorHandler from "../utils/ErrorHandler";
 import { ACCESS_TOKEN } from "../config";
-import { redis } from "../utils/redis";
 import { IUser } from "../model/user.model";
+import { getCache } from "../utils/catche.management";
+import { redis } from "../utils/redis";
 
 export const isAuthenticated = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+   
     // const access_token = req.cookies.access_token as string;
     const access_token = req.headers["access-token"] as string;
-    // const access_token = req.headers["access-token"] as string;
 
     if (!access_token) {
         return next(new ErrorHandler("Please login to access this resource", 401));
@@ -24,10 +25,10 @@ export const isAuthenticated = CatchAsyncErrors(async (req: Request, res: Respon
         }
         // Retrieve user from Redis using the ID from the token
         const user = await redis.get(decoded.id);
+
         if (!user) {
             return next(new ErrorHandler("Please login to access this resource", 400));
         }
-        // Attach the user to the request object
         req.user = JSON.parse(user);
         next();
     } catch (error: any) {

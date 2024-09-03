@@ -1,8 +1,13 @@
+interface AvatarType {
+    public_id: string;
+    url: string;
+}
+
 type UserType = {
     id: string;
     fullname: string;
     email: string;
-    avatar?: string;
+    avatar?: AvatarType;
 };
 
 type CommentType = {
@@ -15,7 +20,7 @@ type ReviewType = {
     user: UserType;
     rating?: number;
     comment: string;
-    commentReplies?: CommentType[]; 
+    commentReplies?: CommentType[];
 }
 
 type LinkType = {
