@@ -1138,6 +1138,7 @@ components:
           type: string
           description: The activation token received when registering
           example: "1234"
+
     UserLogin:
       type: object
       required:
@@ -1174,10 +1175,10 @@ components:
         - token
         - newPassword
       properties:
-        token:
+        code:
           type: string
-          description: The JWT token received in the password reset email
-          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: The activation code received in the password reset email
+          example: "1234"
         newPassword:
           type: string
           description: The new password for the user's account
