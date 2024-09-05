@@ -15,7 +15,7 @@ import sendEmail from "../utils/sendEmail";
 export const addToCart = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     const { courseId, quantity } = req.body;
     const userId = req.user?._id as string;
-
+    console.log(courseId)
 
     if (!mongoose.Types.ObjectId.isValid(courseId)) {
         return next(new ErrorHandler("Invalid course ID", 400));

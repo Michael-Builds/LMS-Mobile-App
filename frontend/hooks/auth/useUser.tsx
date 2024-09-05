@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import axios from "axios"
 import { useEffect, useState } from "react"
 
+
 export default function useUser() {
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)

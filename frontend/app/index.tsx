@@ -6,13 +6,9 @@ import React from "react"
 export default function MainIndex() {
   const { user, loading } = useUser()
 
-  return (
-    <>
-      {loading ? (
-        <Loader />
-      ) : (
-        <Redirect href={!user ? "/(routes)/onboarding" : "/(tabs)"} />
-      )}
-    </>
-  )
+  if (loading) {
+    return <Loader />
+  }
+
+  return <Redirect href={!user ? "/(routes)/onboarding" : "/(tabs)"} />
 }

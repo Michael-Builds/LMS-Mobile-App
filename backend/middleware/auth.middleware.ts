@@ -1,18 +1,17 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { CatchAsyncErrors } from "./catchAsyncError";
-import ErrorHandler from "../utils/ErrorHandler";
 import { ACCESS_TOKEN } from "../config";
 import { IUser } from "../model/user.model";
-import { getCache } from "../utils/catche.management";
+import ErrorHandler from "../utils/ErrorHandler";
 import { redis } from "../utils/redis";
+import { CatchAsyncErrors } from "./catchAsyncError";
 
 export const isAuthenticated = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
 
     // const access_token = req.cookies.access_token as string;
     const access_token = req.headers["access-token"] as string;
    
-    console.log(access_token)
+    // console.log(access_token)
 
     if (!access_token) {
         return next(new ErrorHandler("Please login to access this resource", 401));

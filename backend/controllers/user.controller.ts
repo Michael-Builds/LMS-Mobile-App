@@ -87,6 +87,61 @@ export const createActivationToken = (user: IUser): IActivationToken => {
     return { token, activationCode };
 }
 
+// Resend activation code handler without email input
+export const resendActivationCode = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    const { activation_token } = req.body;
+
+    try {
+        // Decode the activation token to get the email
+        const decoded = jwt.verify(
+            activation_token,
+            ACTIVATION_SECRET as string
+        ) as { user: { email: string }; activationCode: string };
+
+        const { email } = decoded.user;
+
+        // Find the user in the database
+        const user = await userModel.findOne({ email });
+
+        if (!user) {
+            return next(new ErrorHandler("User not found", 404));
+        }
+
+        // Check if user is already verified
+        if (user.isVerified) {
+            return next(new ErrorHandler("User is already verified", 400));
+        }
+
+        // Generate a new activation token and code
+        const { token, activationCode } = createActivationToken(user);
+
+        const data = { user: { fullname: user.fullname }, activationCode };
+
+        // Send the new activation code via email
+        await sendEmail({
+            email: user.email,
+            subject: "Resend Activation Code",
+            template: "resend-activation.ejs",
+            data,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: `A new activation code has been sent to: ${user.email}`,
+            activationToken: token
+        });
+
+    } catch (err: any) {
+        if (err.name === 'TokenExpiredError') {
+            return next(new ErrorHandler("Activation token has expired", 400));
+        } else if (err.name === 'JsonWebTokenError') {
+            return next(new ErrorHandler("Invalid activation token", 400));
+        }
+        return next(new ErrorHandler("Resend activation code failed", 500));
+    }
+});
+
+
 // Interface for activation request
 interface IActivationRequest {
     activation_token: string;
@@ -314,40 +369,86 @@ export const resetPasswordRequest = CatchAsyncErrors(async (req: Request, res: R
     const { email } = req.body;
 
     try {
-        await requestPasswordReset(email);
+        // Check if user exists
+        const user = await userModel.findOne({ email });
+        if (!user) {
+            return next(new ErrorHandler("User not found with this email", 404));
+        }
+
+        // Generate a 4-digit reset code and JWT token
+        const { token, activationCode } = createResetPasswordToken(user);
+
+        // Email data
+        const data = { user: { fullname: user.fullname }, activationCode };
+
+        // Send email with reset code
+        await sendEmail({
+            email: user.email,
+            subject: "Password Reset Request",
+            template: "password-reset.ejs",
+            data,
+        });
+
         res.status(200).json({
             success: true,
-            message: 'Password reset email sent successfully',
+            message: `A password reset code has been sent to ${user.email}`,
+            resetToken: token,
         });
+
     } catch (error: any) {
         return next(new ErrorHandler(error.message, 500));
     }
 });
 
-interface ResetPasswordTokenPayload extends JwtPayload {
-    id: string;
-}
+// Function to create a reset token with activation code
+export const createResetPasswordToken = (user: IUser): IActivationToken => {
+    // Generate a random 4-digit code
+    const activationCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+    // Create a reset JWT token
+    const token = jwt.sign(
+        { user: { id: user._id }, activationCode },
+        RESET_PASSWORD_SECRET as Secret,
+        { expiresIn: "25m" }
+    );
+
+    return { token, activationCode };
+};
+
 
 export const resetPassword = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
-    const { token, newPassword } = req.body;
+    const { token, activationCode, newPassword } = req.body;
 
     try {
-        const decoded = jwt.verify(token, RESET_PASSWORD_SECRET || "") as ResetPasswordTokenPayload;
-        const user = await userModel.findById(decoded.id);
+        // Decode the JWT and get the user ID and code
+        const decoded = jwt.verify(token, RESET_PASSWORD_SECRET as string) as { user: { id: string }; activationCode: string };
 
-        if (!user) {
-            throw new ErrorHandler('Invalid or expired token', 400);
+        if (decoded.activationCode !== activationCode) {
+            return next(new ErrorHandler("Invalid reset code", 400));
         }
 
-        user.password = newPassword;
+        // Find the user by ID
+        const user = await userModel.findById(decoded.user.id);
+        if (!user) {
+            return next(new ErrorHandler("User not found", 404));
+        }
+
+        // Update the password
+        user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
 
         res.status(200).json({
             success: true,
-            message: 'Password reset successfully',
+            message: "Password has been reset successfully",
         });
+
     } catch (error: any) {
-        return next(new ErrorHandler(error.message, error.statusCode || 500));
+        if (error.name === 'TokenExpiredError') {
+            return next(new ErrorHandler("Reset token has expired", 400));
+        } else if (error.name === 'JsonWebTokenError') {
+            return next(new ErrorHandler("Invalid reset token", 400));
+        }
+        return next(new ErrorHandler("Password reset failed", 500));
     }
 });
 

@@ -21,6 +21,7 @@ import {
   View,
 } from "react-native"
 import { Toast } from "react-native-toast-notifications"
+import cartApi from "@/components/urls/cartApi"
 
 export default function CourseDetailScreen() {
   const [activeSection, setActiveSection] = useState<
@@ -50,7 +51,7 @@ export default function CourseDetailScreen() {
 
   const handleAddToCart = async () => {
     try {
-      const response = await axios.post(`${cart}/add-to-cart`, {
+      const response = await cartApi.post("/add-to-cart", {
         courseId: courseData._id,
         quantity: 1,
       })
@@ -68,7 +69,6 @@ export default function CourseDetailScreen() {
         })
       }
     } catch (error) {
-      console.error("Error adding to cart:", error)
       if (axios.isAxiosError(error) && error.response) {
         Toast.show(error.response.data.message || "Failed to add to cart", {
           type: "danger",

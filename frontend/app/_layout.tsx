@@ -3,39 +3,53 @@ import { useFonts } from "expo-font"
 import * as SplashScreen from "expo-splash-screen"
 import { useEffect, useState } from "react"
 import "react-native-reanimated"
-import { Stack } from "expo-router"
+import { Stack, useRouter } from "expo-router"
 import CustomSplashScreen from "@/components/CustomSplashScreen"
-export { ErrorBoundary } from "expo-router"
+import { checkAuth, useAutoRefreshToken } from "@/utils/Functions"
 import { ToastProvider } from "react-native-toast-notifications"
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync()
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
+  const router = useRouter()
+  const [fontsLoaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     ...FontAwesome.font,
   })
 
   const [isReady, setIsReady] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
+  // Auto-refresh token when the user is active
+  useAutoRefreshToken()
+
+  // Check authentication status on layout load
   useEffect(() => {
-    if (error) throw error
-  }, [error])
-
-  useEffect(() => {
-    if (loaded) {
-      const timer = setTimeout(() => {
-        setIsReady(true)
-        SplashScreen.hideAsync()
-      }, 2000)
-
-      return () => clearTimeout(timer)
+    const checkAuthentication = async () => {
+      try {
+        const isAuthenticated = await checkAuth()
+        if (!isAuthenticated) {
+          router.replace("/(routes)/login")
+        }
+        setAuthChecked(true) 
+      } catch (error) {
+        console.error("Error during authentication check:", error)
+      }
     }
-  }, [loaded])
 
-  if (!loaded || !isReady) {
+    checkAuthentication()
+  }, [])
+
+  // Show splash screen until fonts are loaded and auth is checked
+  useEffect(() => {
+    if (fontsLoaded && authChecked) {
+      SplashScreen.hideAsync()
+      setIsReady(true) 
+    }
+  }, [fontsLoaded, authChecked])
+
+  if (!fontsLoaded || !isReady || !authChecked) {
     return <CustomSplashScreen />
   }
 
@@ -67,7 +81,6 @@ function RootLayoutNav() {
             headerBackTitle: "Back",
           }}
         />
-
         <Stack.Screen
           name="(routes)/checkout/index"
           options={{

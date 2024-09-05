@@ -7,7 +7,7 @@ import { Entypo, FontAwesome } from "@expo/vector-icons"
 import { useFonts } from "expo-font"
 import { LinearGradient } from "expo-linear-gradient"
 import { router } from "expo-router"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import {
   FlatList,
   Image,
@@ -63,11 +63,20 @@ export default function CartScreen() {
     router.push("/(routes)/checkout")
   }
 
+  const handleCourseDetails = (courseDetails: any) => {
+    router.push({
+      pathname: "/(routes)/course-details",
+      params: { item: JSON.stringify(courseDetails)},
+    })
+
+    console.log("Course Details", courseDetails)
+  }
+
   const renderCartItem = ({ item }: { item: any }) => (
     <TouchableOpacity style={styles.cartItemContainer}>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => handleCourseDetails(item)}>
         <Image
-          source={{ uri: item.courseId.thumbnail.url }}
+          source={{ uri: item.courseId?.thumbnail.url }}
           style={styles.thumbnail}
         />
       </TouchableOpacity>

@@ -62,6 +62,26 @@ paths:
         "500":
           description: Internal server error
 
+  /auth/api/resend-activation-code:
+    post:
+      summary: Resend the activation code to a user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResendActivationCode"
+      responses:
+        "200":
+          description: Activation code sent successfully
+        "400":
+          description: Invalid token or user already verified
+        "404":
+          description: User not found
+        "500":
+          description: Internal server error
+
   /auth/api/login:
     post:
       summary: User login
@@ -1106,8 +1126,18 @@ components:
           description: The token provided for account activation
         activation_code:
           type: string
-          description: The code provided for account activation
+          description: The 4-digit activation code for the account
+          example: "1234"
 
+    ResendActivationCode:
+      type: object
+      required:
+        - activation_token
+      properties:
+        activation_token:
+          type: string
+          description: The activation token received when registering
+          example: "1234"
     UserLogin:
       type: object
       required:

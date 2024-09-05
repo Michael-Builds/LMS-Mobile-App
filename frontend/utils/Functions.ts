@@ -1,37 +1,94 @@
+import { storeTokens, refreshToken, getAccessToken } from "@/components/urls/tokenHelpers";
 import { router } from "expo-router";
-import axios from "axios";
-import { auth } from "./Endpoints";
 import { Toast } from "react-native-toast-notifications";
+import { jwtDecode } from "jwt-decode";
+import { useEffect } from "react";
+import { authApi } from "@/components/urls/Instances";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-// Utility function for storing tokens securely
-export const storeTokens = async (accessToken: string, refreshToken: string) => {
-  try {
-    await AsyncStorage.setItem("access_token", accessToken);
-    await AsyncStorage.setItem("refresh_token", refreshToken);
-  } catch (error) {
-    throw new Error("Failed to store tokens securely");
-  }
-}
-
 
 // Utility function to handle the login process
 export const handleLogin = async (email: string, password: string) => {
   try {
-    const response = await axios.post(`${auth}/login`, { email, password });
-    const { accessToken, refreshToken } = response.data;
-
-    // Store the tokens securely
-    await storeTokens(accessToken, refreshToken);
-
-    // Redirect to the main app after successful login
+    const { data } = await authApi.post("/login", { email, password });
+    await storeTokens(data.accessToken, data.refreshToken);
     router.push("/(tabs)");
   } catch (error: any) {
-    const errorMessage = error.response?.data?.message || error.message || "An error occurred during login";
-    Toast.show(errorMessage, {
+    const message = error.response?.data?.message || error.message;
+    Toast.show(message, { type: "danger", animationType: "zoom-in" });
+    throw error;
+  }
+};
+
+// Function to handle logout
+export const handleLogout = async () => {
+  try {
+    // Call the backend logout endpoint to invalidate the session
+    await authApi.get("/logout");
+
+    // Show a success message to the user
+    Toast.show("Logged out successfully", {
+      type: "success",
+      animationType: "zoom-in",
+    });
+  } catch (error) {
+    console.error("Logout failed:", error);
+    Toast.show("Error logging out", {
       type: "danger",
       animationType: "zoom-in",
     });
-    throw error;
+  } finally {
+    // Clear tokens from AsyncStorage
+    await AsyncStorage.multiRemove(["access_token", "refresh_token"]);
+
+    // Redirect the user to the login screen
+    router.replace("/(routes)/login");
   }
+};
+
+// Check if the user is authenticated and refresh token if needed
+export const checkAuth = async () => {
+  const accessToken = await getAccessToken();
+
+  if (!accessToken) {
+    const refreshedToken = await refreshToken(authApi);
+    if (!refreshedToken) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+// Decode the JWT token to get its expiration time
+const getTokenExpiration = async (): Promise<number | null> => {
+  const token = await getAccessToken();
+  if (token) {
+    const decoded: any = jwtDecode(token);
+    return decoded?.exp ? decoded.exp * 1000 : null;
+  }
+  return null;
+};
+
+// Check if token is expiring within the next 5 minutes
+export const isTokenExpiringSoon = async (): Promise<boolean> => {
+  const expirationTime = await getTokenExpiration();
+  if (expirationTime) {
+    const currentTime = Date.now();
+    return expirationTime - currentTime <= 5 * 60 * 1000;
+  }
+  return false;
+};
+
+// Hook to refresh token periodically if the user is active
+export const useAutoRefreshToken = () => {
+  useEffect(() => {
+    const refreshInterval = setInterval(async () => {
+      const tokenExpiring = await isTokenExpiringSoon();
+      if (tokenExpiring) {
+        await refreshToken(authApi);
+      }
+    }, 4 * 60 * 1000); // Check every 4 minutes
+
+    return () => clearInterval(refreshInterval);
+  }, []);
 };

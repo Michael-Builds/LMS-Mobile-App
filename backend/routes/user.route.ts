@@ -17,8 +17,9 @@ import {
     rejectAccountRecovery,
     suspendAccount,
     updateUserRole,
-    resetPasswordRequest,  
-    resetPassword
+    resetPasswordRequest,
+    resetPassword,
+    resendActivationCode
 } from '../controllers/user.controller';
 import { authorizeRoles, isAuthenticated } from '../middleware/auth.middleware';
 import { getNotifications, getUserNotifications, updateNotifications } from '../controllers/notification.controller';
@@ -31,8 +32,9 @@ userRouter.post("/account-activate", activateAccount);
 userRouter.post("/login", userLogin);
 userRouter.get("/refresh-token", updateAccessToken);
 userRouter.post("/social-auth", socialAuth);
-userRouter.post("/request-password-reset", resetPasswordRequest);  
-userRouter.post("/reset-password", resetPassword); 
+userRouter.post("/request-password-reset", resetPasswordRequest);
+userRouter.post("/reset-password", resetPassword);
+userRouter.post("/resend-activation", resendActivationCode);
 
 // Authenticated User Routes
 userRouter.get("/logout", isAuthenticated, userLogout);

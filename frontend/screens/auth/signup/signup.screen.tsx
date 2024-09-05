@@ -1,6 +1,6 @@
 import AuthButton from "@/components/buttons/auth.button"
+import { authApi } from "@/components/urls/Instances"
 import { styles } from "@/styles/auth/auth"
-import { auth } from "@/utils/Endpoints"
 import {
   Nunito_400Regular,
   Nunito_500Medium,
@@ -19,7 +19,6 @@ import {
   SimpleLineIcons,
 } from "@expo/vector-icons"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import axios from "axios"
 import { useFonts } from "expo-font"
 import { LinearGradient } from "expo-linear-gradient"
 import { router } from "expo-router"
@@ -91,43 +90,57 @@ export default function SignUpScreen() {
     setUserInfo({ ...userInfo, password: value })
   }
 
+  // Handle sign-up
   const handleSignUp = async () => {
     setRequired("")
 
+    // Validation for required fields
     if (!userInfo.fullname || !userInfo.email || !userInfo.password) {
       setRequired("This field is required")
       return
     }
+
     setButtonSpinner(true)
 
     try {
-      const res = await axios.post(`${auth}/register`, {
+      // Sending sign-up request
+      const res = await authApi.post("/register", {
         fullname: userInfo.fullname,
         email: userInfo.email,
         password: userInfo.password,
       })
 
+      // Store activation token
       await AsyncStorage.setItem("activation-token", res.data.activationToken)
 
+      // Show success message
       Toast.show(res.data.message, {
         type: "success",
         animationType: "zoom-in",
       })
+
+      // Reset form fields
       setUserInfo({
         fullname: "",
         email: "",
         password: "",
       })
+
       setButtonSpinner(false)
       router.push("/verifyAccount")
     } catch (err: any) {
-      Toast.show("Error Creating Account", {
+      // Capture error details if available
+      const errorMessage =
+        err.response?.data?.message || "Error Creating Account"
+      Toast.show(errorMessage, {
         type: "danger",
         animationType: "zoom-in",
       })
+
+      setButtonSpinner(false)
     }
   }
-
+  
   return (
     <LinearGradient colors={["#E5ECF9", "#F6F7F9"]} style={{ flex: 1 }}>
       <ScrollView>
