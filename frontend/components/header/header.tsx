@@ -5,22 +5,29 @@ import { Raleway_600SemiBold } from "@expo-google-fonts/raleway"
 import { Feather } from "@expo/vector-icons"
 import { useFonts } from "expo-font"
 import { router } from "expo-router"
-import React from "react"
+import React, { useEffect } from "react"
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 
 export default function Header() {
   const { user } = useUser()
   const { cartItems } = useCart()
 
+  // Load fonts
   let [fontsLoaded, fontError] = useFonts({
     Raleway_600SemiBold,
     Nunito_400Regular,
   })
 
+  // If fonts aren't loaded, return null
   if (!fontsLoaded && !fontError) {
     return null
   }
 
+  useEffect(() => {
+    console.log("Cart items updated:", cartItems)
+  }, [cartItems])
+
+  // Handle navigating to the cart page
   const handleAddToCart = () => {
     router.push("/(routes)/cart")
   }
@@ -49,22 +56,14 @@ export default function Header() {
           </Text>
         </View>
       </View>
-      <TouchableOpacity
-        onPress={() => handleAddToCart()}
-        style={styles.bellButton}
-      >
+
+      {/* Cart Button */}
+      <TouchableOpacity onPress={handleAddToCart} style={styles.bellButton}>
         <View>
           <Feather name="shopping-bag" size={26} color={"black"} />
           {cartItems.length > 0 && (
             <View style={styles.bellContainer}>
-              <Text
-                style={{
-                  color: "white",
-                  fontFamily: "Nunito_400Regular",
-                }}
-              >
-                {cartItems.length}
-              </Text>
+              <Text style={styles.cartCountText}>{cartItems.length}</Text>
             </View>
           )}
         </View>
@@ -84,12 +83,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     width: "93%",
   },
-
   headerWrapper: {
     flexDirection: "row",
     alignItems: "center",
   },
-
   header: {
     width: 40,
     height: 40,
@@ -98,17 +95,14 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     overflow: "hidden",
   },
-
   image: {
     width: "100%",
     height: "100%",
     resizeMode: "cover",
   },
-
   text: {
     fontSize: 16,
   },
-
   bellButton: {
     borderWidth: 1,
     borderColor: "#E1E2E5",
@@ -118,7 +112,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 8,
   },
-
   bellContainer: {
     width: 20,
     height: 20,
@@ -132,7 +125,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     fontSize: 14,
   },
-
+  cartCountText: {
+    color: "white",
+    fontFamily: "Nunito_400Regular",
+    textAlign: "center",
+  },
   helloText: {
     color: "#7C7C80",
     fontSize: 14,

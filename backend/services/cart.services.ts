@@ -21,7 +21,8 @@ export const addCourseToCart = async (userId: string, courseId: string, quantity
         }
     }
 
-    return await cart.save();
+    await cart.save();
+    return cart;
 };
 
 export const removeCourseFromCart = async (userId: string, courseId: string) => {
@@ -30,5 +31,6 @@ export const removeCourseFromCart = async (userId: string, courseId: string) => 
     if (!cart) throw new Error("Cart not found");
 
     cart.courses = cart.courses.filter(course => course.courseId.toString() !== courseId);
-    return await cart.save();
+    await cart.save();
+    return cart;
 };

@@ -319,8 +319,8 @@ export const userLogout = CatchAsyncErrors(async (req: Request, res: Response, n
 // Update access token handler
 export const updateAccessToken = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // const refresh_token = req.cookies.refresh_token as string;
-        const refresh_token = req.headers["refresh-token"] as string;
+        const refresh_token = req.cookies.refresh_token as string;
+        // const refresh_token = req.headers["refresh-token"] as string;
 
         const decoded = jwt.verify(refresh_token, REFRESH_TOKEN as string) as JwtPayload;
         const message = "Couldn't refresh token";

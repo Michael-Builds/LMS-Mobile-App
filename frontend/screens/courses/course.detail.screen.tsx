@@ -1,5 +1,7 @@
 import CourseLesson from "@/components/courses/course.lesson"
 import ReviewCard from "@/components/reviews/review"
+import { cartApi } from "@/components/urls/Instances"
+import useCart from "@/hooks/cart/useCart"
 import { cart } from "@/utils/Endpoints"
 import {
   Nunito_400Regular,
@@ -21,15 +23,12 @@ import {
   View,
 } from "react-native"
 import { Toast } from "react-native-toast-notifications"
-import cartApi from "@/components/urls/cartApi"
 
 export default function CourseDetailScreen() {
-  const [activeSection, setActiveSection] = useState<
-    "About" | "Lessons" | "Reviews"
-  >("About")
+  const [activeSection, setActiveSection] = useState<  "About" | "Lessons" | "Reviews" >("About")
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
   const [isPurchased, setIsPurchased] = useState(false)
-
+  const { cartItems, addItemToCart } = useCart()
   const { item } = useLocalSearchParams()
   const courseData: CoursesType = JSON.parse(item as string)
 
@@ -45,41 +44,34 @@ export default function CourseDetailScreen() {
     Nunito_500Medium,
   })
 
+
   if (!fontsLoaded && !fontError) {
     return null
   }
 
   const handleAddToCart = async () => {
+    const courseExistsInCart = cartItems.some(
+      (cartItem) => cartItem.courseId._id === courseData._id
+    )
+
+    if (courseExistsInCart) {
+      router.push("/(routes)/cart")
+      return
+    }
+
     try {
-      const response = await cartApi.post("/add-to-cart", {
-        courseId: courseData._id,
-        quantity: 1,
+      const message = await addItemToCart(courseData._id)
+      Toast.show(message, {
+        type: "success",
+        animationType: "zoom-in",
       })
 
-      if (response.data.success) {
-        Toast.show(response.data.message || "Added to cart", {
-          type: "success",
-          animationType: "zoom-in",
-        })
-        router.push("/(routes)/cart")
-      } else {
-        Toast.show(response.data.message || "Failed to add to cart", {
-          type: "danger",
-          animationType: "zoom-in",
-        })
-      }
+      router.push("/(routes)/cart")
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        Toast.show(error.response.data.message || "Failed to add to cart", {
-          type: "danger",
-          animationType: "zoom-in",
-        })
-      } else {
-        Toast.show("An unexpected error occurred", {
-          type: "danger",
-          animationType: "zoom-in",
-        })
-      }
+      Toast.show("Failed to add to cart", {
+        type: "danger",
+        animationType: "zoom-in",
+      })
     }
   }
 

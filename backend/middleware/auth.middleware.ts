@@ -8,9 +8,9 @@ import { CatchAsyncErrors } from "./catchAsyncError";
 
 export const isAuthenticated = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
 
-    // const access_token = req.cookies.access_token as string;
-    const access_token = req.headers["access-token"] as string;
-   
+    const access_token = req.cookies.access_token as string;
+    // const access_token = req.headers["access-token"] as string;
+
     // console.log(access_token)
 
     if (!access_token) {

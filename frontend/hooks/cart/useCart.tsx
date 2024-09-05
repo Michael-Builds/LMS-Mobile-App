@@ -1,7 +1,4 @@
-import { useState, useEffect } from "react"
-import axios from "axios"
-import { cart } from "@/utils/Endpoints"
-import AsyncStorage from "@react-native-async-storage/async-storage"
+import { useState, useEffect, useCallback } from "react"
 import { cartApi } from "@/components/urls/Instances"
 
 export default function useCart() {
@@ -9,8 +6,8 @@ export default function useCart() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
-  // Function to fetch cart items
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
+    setLoading(true)
     try {
       const response = await cartApi.get("/get-carts")
       setCartItems(response.data.cart.courses || [])
@@ -19,29 +16,55 @@ export default function useCart() {
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  // Add item to cart
+  const addItemToCart = async (courseId: string) => {
+    try {
+      const response = await cartApi.post("/add-to-cart", {
+        courseId,
+        quantity: 1,
+      })
+      if (response.data.success) {
+        await fetchCart()
+        return response.data.message
+      } else {
+        throw new Error(response.data.message)
+      }
+    } catch (error: any) {
+      setError(error?.message || "Failed to add item to cart")
+      throw error
+    }
   }
 
-  // Function to remove an item from the cart
+  // Remove item from cart
   const removeItemFromCart = async (courseId: string) => {
     try {
       const response = await cartApi.delete("/remove-cart", {
         data: { courseId },
       })
-
-      setCartItems((prevItems) =>
-        prevItems.filter((item) => item.courseId._id !== courseId)
-      )
-
-      return response.data.message
+      if (response.data.success) {
+        await fetchCart()
+        return response.data.message
+      } else {
+        throw new Error(response.data.message)
+      }
     } catch (error: any) {
       setError(error?.message || "Failed to remove item from cart")
-      throw new Error(error?.message || "Failed to remove item from cart")
+      throw error
     }
   }
 
   useEffect(() => {
     fetchCart()
-  }, [])
+  }, [fetchCart])
 
-  return { cartItems, loading, error, fetchCart, removeItemFromCart }
+  return {
+    cartItems,
+    loading,
+    error,
+    fetchCart,
+    addItemToCart,
+    removeItemFromCart,
+  }
 }
