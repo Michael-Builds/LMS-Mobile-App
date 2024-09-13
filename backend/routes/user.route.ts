@@ -39,6 +39,7 @@ userRouter.post("/resend-activation", resendActivationCode);
 // Authenticated User Routes
 userRouter.get("/logout", isAuthenticated, userLogout);
 userRouter.get("/get-user", isAuthenticated, getUserInfo);
+userRouter.get("/user-notifications", isAuthenticated, getUserNotifications);
 userRouter.put("/update-profile", isAuthenticated, updateUserProfile);
 userRouter.put("/update-password", isAuthenticated, updatePassword);
 userRouter.post("/deactivate", isAuthenticated, deactivateAccount);
@@ -47,7 +48,6 @@ userRouter.post("/deactivate", isAuthenticated, deactivateAccount);
 userRouter.post("/recover-account", isAuthenticated, requestAccountRecovery);
 
 // Route to get notifications for the logged-in user
-userRouter.get("/user-notifications", isAuthenticated, getUserNotifications);
 
 // Admin Routes
 userRouter.get("/get-users", isAuthenticated, authorizeRoles("admin"), getAllUsers);

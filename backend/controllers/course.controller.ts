@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 import sendEmail from "../utils/sendEmail";
 import notificatioModel from "../model/notification.model";
 import userModel from "../model/user.model";
-import { delCache, setCache } from "../utils/catche.management";
+import { clearCache, setCache } from "../utils/catche.management";
 
 // Controller to handle course upload
 export const uploadCourse = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -103,8 +103,8 @@ export const editCourse = CatchAsyncErrors(async (req: Request, res: Response, n
         }
 
         // Invalidate the cached data for this course and all courses
-        await delCache(courseId);
-        await delCache("allCourses");
+        await clearCache(courseId);
+        await clearCache("allCourses");
         
         // Send success response
         res.status(200).json({
@@ -216,7 +216,7 @@ export const deleteCourse = CatchAsyncErrors(async (req: Request, res: Response,
         await courseModel.findByIdAndDelete(courseId);
 
         // Remove the course from Redis cache
-        await delCache(courseId);
+        await clearCache(courseId);
 
         // Send a success response
         res.status(200).json({

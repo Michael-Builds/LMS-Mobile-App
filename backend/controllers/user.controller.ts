@@ -13,7 +13,7 @@ import cloudinary from "cloudinary"
 import deactivatedModel from '../model/deactivate.model';
 import pendingActivationModel from '../model/pendingActivation.model';
 import notificatioModel from '../model/notification.model';
-import { delCache, setCache } from '../utils/catche.management';
+import { clearCache, setCache } from '../utils/catche.management';
 
 // Account registration handler
 export const accountRegister = CatchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -301,7 +301,7 @@ export const userLogout = CatchAsyncErrors(async (req: Request, res: Response, n
         if (user) {
             // Convert the user's ObjectId to a string format
             const userId = String(user._id);
-            await delCache(userId);
+            await clearCache(userId);
         } else {
             console.warn("No user found in request, skipping Redis deletion.");
         }
@@ -709,7 +709,7 @@ export const deleteUser = CatchAsyncErrors(async (req: Request, res: Response, n
         await userModel.findByIdAndDelete(userId);
 
         // Remove user session from Redis
-        await delCache(userId);
+        await clearCache(userId);
 
         // Create a notification for the user
         await notificatioModel.create({
@@ -958,7 +958,7 @@ export const suspendAccount = CatchAsyncErrors(async (req: Request, res: Respons
         await userModel.findByIdAndDelete(id);
 
         // Remove user session from Redis
-        await delCache(id);
+        await clearCache(id);
 
 
         // Create a notification for account recovery rejection
